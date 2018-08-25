@@ -41,11 +41,17 @@ public class Player extends JLabel implements KeyListener, ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         requestFocusInWindow();
-        if (y < 300) {
-            velY = 7;
-            y = 300;
+        if (y < 250) {
+            velY = 5;
+            y = 249;
         }
-        if (y > 500) {
+        else if (y >= 250 && y <= 260) {
+            velY = 1;
+        }
+        else if (y > 260 && y < 399 && velY > 0) {
+            velY = 5;
+        }
+        else if (y > 500) {
             velY = 0;
             y = 500;
         }
