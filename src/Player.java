@@ -8,7 +8,6 @@ import java.awt.event.KeyListener;
 public class Player extends JLabel implements KeyListener, ActionListener {
 
     private Timer t = new Timer(5, this);
-    private boolean doubleJump = false;
     private final static int playerLength = 50;
     private final static int playerHeight = 50;
     private int x = 20, y = 500, velY = 0;
@@ -41,15 +40,16 @@ public class Player extends JLabel implements KeyListener, ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         requestFocusInWindow();
-        if (y < 250) {
-            velY = 5;
-            y = 249;
+        if (y < 240) {
+            velY = 9;
+            y = 242;
         }
-        else if (y >= 250 && y <= 260) {
-            velY = 1;
-        }
-        else if (y > 260 && y < 399 && velY > 0) {
+        // create small delay at apex of jump
+        else if (y <= 252 && velY > 0) {
             velY = 5;
+        }
+        else if (y < 399 && velY > 0) {
+            velY = 7;
         }
         else if (y > 500) {
             velY = 0;
@@ -70,7 +70,7 @@ public class Player extends JLabel implements KeyListener, ActionListener {
     public void keyReleased(KeyEvent e) {
         if (y != 500) return;
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
-            velY = -6;
+            velY = -9;
         }
     }
 
@@ -85,7 +85,7 @@ public class Player extends JLabel implements KeyListener, ActionListener {
     public void keyPressed(KeyEvent e) {
         if (y != 500) return;
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
-            velY = -6;
+            velY = -9;
         }
     }
 
@@ -101,4 +101,19 @@ public class Player extends JLabel implements KeyListener, ActionListener {
     public void keyTyped(KeyEvent e) {
     }
 
+    public int getPlayerLength() {
+        return playerLength;
+    }
+
+    public int getPlayerHeight() {
+        return playerHeight;
+    }
+
+    public int getXOrd() {
+        return x;
+    }
+
+    public int getYOrd() {
+        return y;
+    }
 }

@@ -8,17 +8,16 @@ public class Obstacle {
     public Obstacle(int x, int y) {
         this.x = x;
         this.y = y;
-        length = 100;
+        length = 100; // randomly generate length
         height = 50;
         inFrame = true;
     }
 
     public void move() {
-        // in jumpoverlayout   when looping to print  ->  if inFrame false remove
         if (x + length < 0) {
             inFrame = false;
         }
-        x -= 3; // variable for number so increase slowly   put limit on speed (so wont be impossible)
+        x -= 5; // variable for number so increase slowly   put limit on speed (so wont be impossible)
             // 10    15 for extra hard mode
     }
 
@@ -31,7 +30,7 @@ public class Obstacle {
     }
 
     public int getLength() {
-        return this.length;     // randomly generate length
+        return this.length;
     }
 
     public int getHeight() {
