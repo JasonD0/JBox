@@ -8,10 +8,12 @@ import java.util.Iterator;
 public class JumpOverLayout extends JPanel implements ActionListener {
 
     private Timer obstacleDelayer; // delays new obstacles
+    private Timer gameTimer;
     private Timer t =  new Timer(5, this);
     private ArrayList<Obstacle> obstacles;
     private Player p;
     private boolean endGame = false;    // quick way to prevent concurrency (clearing list when list currently being modified)
+    private int counter;
 
     public JumpOverLayout() {
         init();
@@ -21,6 +23,7 @@ public class JumpOverLayout extends JPanel implements ActionListener {
         setLayout(new BorderLayout());
         p = new Player();
         add(p, BorderLayout.WEST);
+        add(initTimeLabel(), BorderLayout.NORTH);
         obstacles = new ArrayList<>();
         obstacleDelayer = new Timer(1500, new ActionListener(){
             // decrease delay slowly (when obs moves faster)     but random speeds between ranges
@@ -31,12 +34,13 @@ public class JumpOverLayout extends JPanel implements ActionListener {
              */
             @Override
             public void actionPerformed(ActionEvent e) {
-                Obstacle o = new Obstacle(1000, 500 - 0);
+                Obstacle o = new Obstacle(1000, 500 + 16);
                 obstacles.add(o);
             }
         });
         obstacleDelayer.start();
         t.start();
+        gameTimer.start();
     }
 
     @Override
@@ -70,6 +74,8 @@ public class JumpOverLayout extends JPanel implements ActionListener {
                     System.out.println("Game Over");
                     t.stop();
                     obstacleDelayer.stop();
+                    gameTimer.stop();
+                    counter = -1;
                     endGame();
                 }
             }
@@ -102,6 +108,7 @@ public class JumpOverLayout extends JPanel implements ActionListener {
                 removeObstacles();
                 t.start();
                 obstacleDelayer.start();
+                gameTimer.start();
             }
         });
 
@@ -113,5 +120,18 @@ public class JumpOverLayout extends JPanel implements ActionListener {
         pane.setOptions(option);
 
         dialog.setVisible(true);
+    }
+
+    private JLabel initTimeLabel() {
+        counter = 0;
+        JLabel timer = new JLabel("Time    " + counter);
+        gameTimer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                counter++;
+                timer.setText("Time    " + counter);
+            }
+        });
+        return timer;
     }
 }
