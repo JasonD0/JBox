@@ -6,6 +6,7 @@ public class JumpOver extends JFrame implements Runnable {
     public static final int LENGTH = 1000;
     public static final int HEIGHT = 700;
     public static final String TITLE = "JumpOver";
+    private Box boxLayout;
 
     public static void main(String[] arg) {
         JumpOver game = new JumpOver();
@@ -18,10 +19,13 @@ public class JumpOver extends JFrame implements Runnable {
         setPreferredSize(new Dimension(LENGTH, HEIGHT));
         setFocusable(true);
 
-        setLayout(new BorderLayout());
-        Player p = new Player();
-        add(p, BorderLayout.WEST);
-        getContentPane().setBackground(Color.BLACK);
+        boxLayout = new Box(BoxLayout.Y_AXIS);
+        JumpOverLayout jpl = new JumpOverLayout();
+        boxLayout.add(jpl);
+        //Player p = new Player();
+        //add(p, BorderLayout.WEST);
+       // getContentPane().setBackground(Color.BLACK);
+        setContentPane(boxLayout);
 
         pack();
         setVisible(true);

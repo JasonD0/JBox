@@ -29,6 +29,10 @@ public class Player extends JLabel implements KeyListener, ActionListener {
         addKeyListener(this);
     }
 
+    public Rectangle getBoundary() {
+        return new Rectangle(x, y, playerLength, playerHeight);
+    }
+
     /**
      * Invoked when an action occurs.
      *
