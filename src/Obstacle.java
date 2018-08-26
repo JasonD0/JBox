@@ -10,8 +10,8 @@ public class Obstacle {
         this.x = x;
         this.y = y;
         this.obstacleVel = obstacleVel;
-        this.length = length; // randomly generate length   100-170     // CAREFUL NEED TO ADJUST X POSITION
-        this.height = height;   // 50 - 100
+        this.length = length;
+        this.height = height;
         inFrame = true;
     }
 

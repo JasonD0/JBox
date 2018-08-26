@@ -68,6 +68,10 @@ public class Player extends JLabel implements KeyListener, ActionListener {
      */
     @Override
     public void keyReleased(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+            velY = 0;
+            y = 500;
+        }
         if (y != 500) return;
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
             velY = -9;
@@ -83,6 +87,10 @@ public class Player extends JLabel implements KeyListener, ActionListener {
      */
     @Override
     public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+            velY = 0;
+            y = 500;
+        }
         if (y != 500) return;
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
             velY = -9;
