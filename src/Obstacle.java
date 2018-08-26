@@ -4,12 +4,14 @@ public class Obstacle {
 
     private int length, height, x, y;
     private boolean inFrame;
+    private int obstacleVel;
 
-    public Obstacle(int x, int y) {
+    public Obstacle(int x, int y, int obstacleVel, int length, int height) {
         this.x = x;
         this.y = y;
-        length = 100; // randomly generate length
-        height = 50;
+        this.obstacleVel = obstacleVel;
+        this.length = length; // randomly generate length   100-170     // CAREFUL NEED TO ADJUST X POSITION
+        this.height = height;   // 50 - 100
         inFrame = true;
     }
 
@@ -17,8 +19,7 @@ public class Obstacle {
         if (x + length < 0) {
             inFrame = false;
         }
-        x -= 5; // variable for number so increase slowly   put limit on speed (so wont be impossible)
-            // 10    15 for extra hard mode
+        x -= obstacleVel;
     }
 
     public int getX() {
@@ -39,6 +40,10 @@ public class Obstacle {
 
     public boolean inFrame() {
         return this.inFrame;
+    }
+
+    public void setVel(int speed) {
+        obstacleVel = speed;
     }
 
     public Rectangle getBoundary() {

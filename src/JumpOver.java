@@ -20,11 +20,8 @@ public class JumpOver extends JFrame implements Runnable {
         setFocusable(true);
 
         boxLayout = new Box(BoxLayout.Y_AXIS);
-        JumpOverLayout jpl = new JumpOverLayout();
+        JumpOverLayout jpl = new JumpOverLayout(this);
         boxLayout.add(jpl);
-        //Player p = new Player();
-        //add(p, BorderLayout.WEST);
-       // getContentPane().setBackground(Color.BLACK);
         setContentPane(boxLayout);
 
         pack();

@@ -46,10 +46,10 @@ public class Player extends JLabel implements KeyListener, ActionListener {
         }
         // create small delay at apex of jump
         else if (y <= 252 && velY > 0) {
-            velY = 5;
+            velY = 7;
         }
         else if (y < 399 && velY > 0) {
-            velY = 7;
+            velY = 9;
         }
         else if (y > 500) {
             velY = 0;
