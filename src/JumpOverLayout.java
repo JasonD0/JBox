@@ -38,7 +38,7 @@ public class JumpOverLayout extends JPanel implements ActionListener {
         initTimeLabel();
         initObstacles();
 
-        delay = new Timer(2500, new ActionListener(){
+        delay = new Timer(1500, new ActionListener(){
 
             /**
              * Invoked when an action occurs.
@@ -151,6 +151,10 @@ public class JumpOverLayout extends JPanel implements ActionListener {
             }
         }
         repaint();
+        /*try {
+            Thread.sleep(20);
+        } catch (InterruptedException exc) {
+        }*/
         endGame = true;
     }
 
@@ -192,23 +196,26 @@ public class JumpOverLayout extends JPanel implements ActionListener {
     private void changeObstacleDelay() {
         switch (counter) {
             case 15:
-                delayMin = 950;
-                delayMax = 1700;
+                delayMin = 750;
+                delayMax = 1150;
                 obstacleVel = 7;
                 break;
             case 35:
-                delayMin = 950;
-                delayMax = 1250;
+                delayMin = 650;
+                delayMax = 1050;
                 obstacleVel = 9;
                 break;
             case 85:
-                delayMin = 950;
+                delayMin = 650;
                 delayMax = 1150;
                 obstacleVel = 14;
-                break;
-            case 155:
                 // add floating platforms -> halfway up from square
                 // add crouch mechanic -> reduces size of sq to half
+                break;
+            case 155:
+                // float platforms can now be extremley high  ie cant jump over some
+                delayMin = 950;
+                delayMax = 1250;
                 obstacleVel = 15;
                 break;
             case 300:

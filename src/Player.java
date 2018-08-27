@@ -41,15 +41,15 @@ public class Player extends JLabel implements KeyListener, ActionListener {
     public void actionPerformed(ActionEvent e) {
         requestFocusInWindow();
         if (y < 240) {
-            velY = 9;
+            velY = 7;
             y = 242;
         }
         // create small delay at apex of jump
         else if (y <= 252 && velY > 0) {
-            velY = 7;
+            velY = 5;
         }
         else if (y < 399 && velY > 0) {
-            velY = 9;
+            velY = 7;
         }
         else if (y > 500) {
             velY = 0;
@@ -74,7 +74,7 @@ public class Player extends JLabel implements KeyListener, ActionListener {
         }
         if (y != 500) return;
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
-            velY = -9;
+            velY = -7;
         }
     }
 
@@ -93,7 +93,7 @@ public class Player extends JLabel implements KeyListener, ActionListener {
         }
         if (y != 500) return;
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
-            velY = -9;
+            velY = -7;
         }
     }
 
