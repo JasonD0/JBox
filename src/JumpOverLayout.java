@@ -34,23 +34,10 @@ public class JumpOverLayout extends JPanel implements ActionListener {
         setLayout(new BorderLayout());
         setBackground(new Color(51, 51, 51));
         add(p, BorderLayout.WEST);
-   //     add(initTimeLabel(), BorderLayout.NORTH);
-        initTimeLabel();
+
+        initTimeLabel();    //     add(initTimeLabel(), BorderLayout.NORTH);
         initObstacles();
-
-        delay = new Timer(1500, new ActionListener(){
-
-            /**
-             * Invoked when an action occurs.
-             *
-             * @param e the event to be processed
-             */
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                delay.stop();
-                obstacleDelayer.start();
-            }
-        });
+        initSpeedIncreaseDelayer();
 
         obstacleDelayer.start();
         t.start();
@@ -80,6 +67,22 @@ public class JumpOverLayout extends JPanel implements ActionListener {
         });
     }
 
+    private void initSpeedIncreaseDelayer() {
+        delay = new Timer(1000, new ActionListener(){
+
+            /**
+             * Invoked when an action occurs.
+             *
+             * @param e the event to be processed
+             */
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                delay.stop();
+                obstacleDelayer.start();
+            }
+        });
+    }
+
     private JLabel initTimeLabel() {
         counter = 0;
         JLabel timer = new JLabel("Time    " + counter);
@@ -98,21 +101,28 @@ public class JumpOverLayout extends JPanel implements ActionListener {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+        drawTime(g);
+        drawPlatform(g);
+        drawObstacles(g);
+    }
 
+    private void drawTime(Graphics g) {
         Graphics2D g2d = (Graphics2D)g;
-        Stroke defaultStroke = g2d.getStroke();
-
         g2d.setFont(new Font(null, Font.BOLD, 20));
         g2d.setColor(Color.WHITE);
         g2d.drawString(counter + "", 870, 50);
         g.setColor(new Color(255, 153, 0));
         g2d.drawString("Time ", 800, 50);
+    }
 
+    private void drawPlatform(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
         Stroke dashed = new BasicStroke(3, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_BEVEL, 0, new float[]{9}, 0);
         g2d.setStroke(dashed);
         g2d.drawLine(0, 550, 1000, 550);
-        g2d.setStroke(defaultStroke);
+    }
 
+    private void drawObstacles(Graphics g) {
         for (Obstacle o : obstacles) {
             g.setColor(new Color(45,45,45));
             g.fillRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
@@ -134,40 +144,27 @@ public class JumpOverLayout extends JPanel implements ActionListener {
             if (!o.inFrame()) {
                 itr.remove();
             } else {
-                // if intersect then game over
-                if (p.getXOrd() + p.getPlayerLength() < o.getX() ||
-                        p.getXOrd() > o.getX() + o.getLength() ||
-                        p.getYOrd() + p.getPlayerHeight() < o.getY() ||
-                        p.getYOrd() > o.getY() + o.getHeight())
-                    o.move();
-                else {
-                    System.out.println("Game Over");
-                    t.stop();
-                    obstacleDelayer.stop();
-                    gameTimer.stop();
-                    endGame();
-                  //  counter = -1;
-                }
+                if (checkCollision(o)) o.move();
+                else endGame();
             }
         }
         repaint();
-        /*try {
-            Thread.sleep(20);
-        } catch (InterruptedException exc) {
-        }*/
         endGame = true;
     }
 
-    private void removeObstacles() {
-        endGame = false;
-        Iterator<Obstacle> itr = obstacles.iterator();
-        while (itr.hasNext()) {
-            Object o = itr.next();
-            itr.remove();
-        }
+    private boolean checkCollision(Obstacle o) {
+        return (p.getXOrd() + p.getPlayerLength() < o.getX() ||
+                p.getXOrd() > o.getX() + o.getLength() ||
+                p.getYOrd() + p.getPlayerHeight() < o.getY() ||
+                p.getYOrd() > o.getY() + o.getHeight());
     }
 
     private void endGame() {
+        System.out.println("Game Over");
+        t.stop();
+        obstacleDelayer.stop();
+        gameTimer.stop();
+
         UIManager.put("Panel.background", new Color(51, 51, 51));
         UIManager.put("OptionPane.background", new Color(51, 51, 51));
 
@@ -191,39 +188,6 @@ public class JumpOverLayout extends JPanel implements ActionListener {
         dialog.setSize(new Dimension(300, 170));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
-    }
-
-    private void changeObstacleDelay() {
-        switch (counter) {
-            case 15:
-                delayMin = 750;
-                delayMax = 1150;
-                obstacleVel = 7;
-                break;
-            case 35:
-                delayMin = 650;
-                delayMax = 1050;
-                obstacleVel = 9;
-                break;
-            case 85:
-                delayMin = 650;
-                delayMax = 1150;
-                obstacleVel = 14;
-                // add floating platforms -> halfway up from square
-                // add crouch mechanic -> reduces size of sq to half
-                break;
-            case 155:
-                // float platforms can now be extremley high  ie cant jump over some
-                delayMin = 950;
-                delayMax = 1250;
-                obstacleVel = 15;
-                break;
-            case 300:
-                obstacleVel = 16;
-                break;
-        }
-        obstacleDelayer.stop();
-        delay.start();
     }
 
     private JButton createButton(String option, JDialog dialog) {
@@ -257,5 +221,48 @@ public class JumpOverLayout extends JPanel implements ActionListener {
         icon = icon.getScaledInstance(30, 30, Image.SCALE_SMOOTH);
         b.setIcon(new ImageIcon(icon));
         return b;
+    }
+
+
+    private void removeObstacles() {
+        endGame = false;
+        Iterator<Obstacle> itr = obstacles.iterator();
+        while (itr.hasNext()) {
+            itr.remove();
+            itr.next();
+        }
+    }
+
+    private void changeObstacleDelay() {
+        switch (counter) {
+            case 15:
+                delayMin = 750;
+                delayMax = 1150;
+                obstacleVel = 7;
+                break;
+            case 35:
+                delayMin = 650;
+                delayMax = 1050;
+                obstacleVel = 9;
+                break;
+            case 85:
+                delayMin = 650;
+                delayMax = 1150;
+                obstacleVel = 14;
+                // add floating platforms -> halfway up from square
+                // add crouch mechanic -> reduces size of sq to half
+                break;
+            case 155:
+                // float platforms can now be extremley high  ie cant jump over some
+                delayMin = 950;
+                delayMax = 1250;
+                obstacleVel = 15;
+                break;
+            case 300:
+                obstacleVel = 16;
+                break;
+        }
+        obstacleDelayer.stop();
+        delay.start();
     }
 }
