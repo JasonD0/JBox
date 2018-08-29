@@ -101,8 +101,11 @@ public class JumpOverLayout extends JPanel implements ActionListener {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g;
+        Stroke defaultStroke = g2d.getStroke();
         drawTime(g);
         drawPlatform(g);
+        g2d.setStroke(defaultStroke);
         drawObstacles(g);
     }
 
