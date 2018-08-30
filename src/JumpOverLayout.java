@@ -2,11 +2,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
+import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
 
-public class JumpOverLayout extends JPanel implements ActionListener {
+public class JumpOverLayout extends JPanel implements ActionListener, KeyListener {
 
     private Timer obstacleDelayer; // delays new obstacles
     private Timer gameTimer;        // survival time
@@ -34,6 +38,10 @@ public class JumpOverLayout extends JPanel implements ActionListener {
         setLayout(new BorderLayout());
         setBackground(new Color(51, 51, 51));
         add(p, BorderLayout.WEST);
+        setFocusTraversalKeysEnabled(false);
+        setFocusable(true);
+        setVisible(true);
+        addKeyListener(this);
 
         initTimeLabel();    //     add(initTimeLabel(), BorderLayout.NORTH);
         initObstacles();
@@ -101,8 +109,11 @@ public class JumpOverLayout extends JPanel implements ActionListener {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+        //BufferedImage buffer = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+        //Graphics2D g2d = (Graphics2D) buffer.getGraphics();
         Graphics2D g2d = (Graphics2D) g;
         Stroke defaultStroke = g2d.getStroke();
+        drawPlayer(g);
         drawTime(g);
         drawPlatform(g);
         g2d.setStroke(defaultStroke);
@@ -134,6 +145,11 @@ public class JumpOverLayout extends JPanel implements ActionListener {
         }
     }
 
+    private void drawPlayer(Graphics g) {
+        g.setColor(Color.RED);
+        g.fillRect(p.getXOrd(), p.getYOrd(), p.getPlayerLength(), p.getPlayerHeight());
+    }
+
     /**
      * Invoked when an action occurs.
      *
@@ -141,6 +157,7 @@ public class JumpOverLayout extends JPanel implements ActionListener {
      */
     @Override
     public void actionPerformed(ActionEvent e) {
+        requestFocusInWindow();
         Iterator<Obstacle> itr = obstacles.iterator();
         while (itr.hasNext() && endGame != false) {
             Obstacle o = itr.next();
@@ -151,8 +168,27 @@ public class JumpOverLayout extends JPanel implements ActionListener {
                 else endGame();
             }
         }
-        repaint();
+        int y = p.getYOrd();
+        int velY = p.getVelY();
+        if (y < 240) {
+            p.setVelY(5);
+            p.setYord(242);
+        }
+        // create small delay at apex of jump
+        else if (y <= 252 && velY > 0) {
+            p.setVelY(3);
+        }
+        else if (y < 399 && velY > 0) {
+            p.setVelY(5);
+        }
+        else if (y > 500) {
+            p.setVelY(0);
+            p.setYord(500);
+        }
+        p.setYord(p.getYOrd() + p.getVelY());
+
         endGame = true;
+        repaint();
     }
 
     private boolean checkCollision(Obstacle o) {
@@ -231,8 +267,8 @@ public class JumpOverLayout extends JPanel implements ActionListener {
         endGame = false;
         Iterator<Obstacle> itr = obstacles.iterator();
         while (itr.hasNext()) {
-            itr.remove();
             itr.next();
+            itr.remove();
         }
     }
 
@@ -251,7 +287,7 @@ public class JumpOverLayout extends JPanel implements ActionListener {
             case 85:
                 delayMin = 650;
                 delayMax = 1150;
-                obstacleVel = 14;
+                obstacleVel = 13;
                 // add floating platforms -> halfway up from square
                 // add crouch mechanic -> reduces size of sq to half
                 break;
@@ -267,5 +303,32 @@ public class JumpOverLayout extends JPanel implements ActionListener {
         }
         obstacleDelayer.stop();
         delay.start();
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {}
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+            p.setVelY(0);
+            p.setYord(500);
+        }
+        if (p.getYOrd() != 500) return;
+        if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
+            p.setVelY(-5);
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+            p.setVelY(0);
+            p.setYord(500);
+        }
+        if (p.getYOrd() != 500) return;
+        if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
+            p.setVelY(-5);
+        }
     }
 }
