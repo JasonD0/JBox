@@ -24,6 +24,8 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
     private int obstacleLength, obstacleHeight, obstacleVel;
     private final static int GAME_LENGTH = 1000;
     private final static int GAME_HEIGHT = 550;
+    private final static int PLAYER_HEIGHT = 50;
+    private boolean instructions = true;
 
     public JumpOverLayout(JumpOver g) {
         game = g;
@@ -55,7 +57,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         delayMax = 2000;
         obstacleVel = 5;
         obstacles = new ArrayList<>();
-        obstacleDelayer = new Timer(1000, new ActionListener(){
+        obstacleDelayer = new Timer(2000, new ActionListener(){
             /**
              * Invoked when an action occurs.
              *
@@ -63,14 +65,14 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
              */
             @Override
             public void actionPerformed(ActionEvent e) {
-                // if float     rand <=30 -> float    (counter < 155 && > ?) ? same as below : randomised heights and length  -> so some wont be able to jump over
-                // else
-                obstacleHeight = (counter < 85) ? 50 : rand.nextInt(150 - 50 + 1) + 50;
+                int prob = rand.nextInt(100) + 1;
+                int y = (counter < 35) ? 0 : (prob <= 30) ? rand.nextInt(50 - 26 + 1) + 26 : 0;
+                obstacleHeight = (counter < 85) ? 50 : (prob <= 30) ? rand.nextInt(150 + (100 - prob) - 50 + 1) + 50 : rand.nextInt(150 - 50 + 1) + 50;
                 obstacleLength = (counter < 85) ? 100 : rand.nextInt(250 - 100 + 1) + 100;
-                Obstacle o = new Obstacle(GAME_LENGTH, GAME_HEIGHT - obstacleHeight, obstacleVel, obstacleLength, obstacleHeight);
+                Obstacle o = new Obstacle(GAME_LENGTH, GAME_HEIGHT - obstacleHeight - y, obstacleVel, obstacleLength, obstacleHeight);
                 obstacles.add(o);
-                int x = rand.nextInt(delayMax - delayMin + 1) + delayMin;
-                obstacleDelayer.setDelay(x);
+                int v = rand.nextInt(delayMax - delayMin + 1) + delayMin;
+                obstacleDelayer.setDelay(v);
             }
         });
     }
@@ -101,6 +103,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
                 counter++;
                 timer.setText("Time    " + counter);
                 if (counter == 15 || counter == 35 || counter == 85 || counter == 155 || counter == 300) changeObstacleDelay();
+                if (counter == 0 || counter == 35 || counter == 85) instructions = true;
             }
         });
         return timer;
@@ -116,6 +119,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         drawPlayer(g);
         drawTime(g);
         drawPlatform(g);
+        if (instructions) drawInstructions(g);
         g2d.setStroke(defaultStroke);
         drawObstacles(g);
     }
@@ -148,6 +152,16 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
     private void drawPlayer(Graphics g) {
         g.setColor(Color.RED);
         g.fillRect(p.getXOrd(), p.getYOrd(), p.getPlayerLength(), p.getPlayerHeight());
+    }
+
+    private void drawInstructions(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setFont(new Font(null, Font.BOLD, 25));
+        g2d.setColor(Color.WHITE);
+        if (counter < 5) g2d.drawString("PRESS UP OR SPACE TO JUMP", 300, 225);
+        else if (counter >= 35 && counter < 40) g2d.drawString("PRESS DOWN TO DUCK", 333, 225);
+        else if (counter >= 85 && counter < 90) g2d.drawString("OBSTACLES WILL NOW HAVE RANDOM DIMENSIONS", 170, 225);
+        else instructions = false;
     }
 
     /**
@@ -187,9 +201,9 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         else if (y < 399 && velY > 0) {
             p.setVelY(6);
         }
-        else if (y > 500) {
+        else if (y > GAME_HEIGHT - p.getPlayerHeight()) {
             p.setVelY(0);
-            p.setYord(500);
+            p.setYord(GAME_HEIGHT - p.getPlayerHeight());
         }
         p.setYord(p.getYOrd() + p.getVelY());
 
@@ -292,16 +306,15 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
                 delayMin = 800;
                 delayMax = 1300;
                 obstacleVel = 12;
-                // add floating platforms -> halfway up from square
-                // add crouch mechanic -> reduces size of sq to half
                 break;
             case 155:
-                // float platforms can now be extremley high  ie cant jump over some
-                delayMin = 700;
-                delayMax = 1300;
+                delayMin = 850;
+                delayMax = 1350;
                 obstacleVel = 14;
                 break;
             case 300:
+                delayMin = 950;
+                delayMax = 1450;
                 obstacleVel = 17;
                 break;
         }
@@ -314,11 +327,13 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return;
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            p.setVelY(0);
-            p.setYord(500);
+            if (p.getPlayerHeight() == PLAYER_HEIGHT) {
+                p.setPlayerHeight(p.getPlayerHeight()/2);
+                p.setYord(p.getYOrd() + p.getPlayerHeight());
+            }
         }
-        if (p.getYOrd() != 500) return;
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
             p.setVelY(-6);
         }
@@ -326,11 +341,14 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
 
     @Override
     public void keyReleased(KeyEvent e) {
+        if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return;
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            p.setVelY(0);
-            p.setYord(500);
+           if (p.getPlayerHeight() < PLAYER_HEIGHT) {
+               p.setPlayerHeight(PLAYER_HEIGHT);
+           }
+           p.setYord(p.getYOrd() + p.getPlayerHeight());
         }
-        if (p.getYOrd() != 500) return;
+     //   p.setPlayerHeight(PLAYER_HEIGHT);
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
             p.setVelY(-6);
         }
