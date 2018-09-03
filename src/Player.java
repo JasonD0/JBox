@@ -1,9 +1,7 @@
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import javax.swing.JLabel;
+import java.awt.Rectangle;
+import java.awt.Dimension;
+import java.awt.Color;
 
 public class Player extends JLabel{
 

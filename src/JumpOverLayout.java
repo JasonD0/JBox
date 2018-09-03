@@ -4,8 +4,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.image.BufferedImage;
-import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
@@ -65,6 +63,8 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
              */
             @Override
             public void actionPerformed(ActionEvent e) {
+                // if float     rand <=30 -> float    (counter < 155 && > ?) ? same as below : randomised heights and length  -> so some wont be able to jump over
+                // else
                 obstacleHeight = (counter < 85) ? 50 : rand.nextInt(150 - 50 + 1) + 50;
                 obstacleLength = (counter < 85) ? 100 : rand.nextInt(250 - 100 + 1) + 100;
                 Obstacle o = new Obstacle(GAME_LENGTH, GAME_HEIGHT - obstacleHeight, obstacleVel, obstacleLength, obstacleHeight);
@@ -168,18 +168,24 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
                 else endGame();
             }
         }
+        movePlayer();
+        endGame = true;
+        repaint();
+    }
+
+    private void movePlayer() {
         int y = p.getYOrd();
         int velY = p.getVelY();
         if (y < 240) {
-            p.setVelY(5);
+            p.setVelY(6);
             p.setYord(242);
         }
         // create small delay at apex of jump
         else if (y <= 252 && velY > 0) {
-            p.setVelY(3);
+            p.setVelY(4);
         }
         else if (y < 399 && velY > 0) {
-            p.setVelY(5);
+            p.setVelY(6);
         }
         else if (y > 500) {
             p.setVelY(0);
@@ -187,8 +193,6 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         }
         p.setYord(p.getYOrd() + p.getVelY());
 
-        endGame = true;
-        repaint();
     }
 
     private boolean checkCollision(Obstacle o) {
@@ -276,29 +280,29 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         switch (counter) {
             case 15:
                 delayMin = 750;
-                delayMax = 1150;
+                delayMax = 1450;
                 obstacleVel = 7;
                 break;
             case 35:
-                delayMin = 650;
-                delayMax = 1050;
+                delayMin = 850;
+                delayMax = 1300;
                 obstacleVel = 9;
                 break;
             case 85:
-                delayMin = 650;
-                delayMax = 1150;
-                obstacleVel = 13;
+                delayMin = 800;
+                delayMax = 1300;
+                obstacleVel = 12;
                 // add floating platforms -> halfway up from square
                 // add crouch mechanic -> reduces size of sq to half
                 break;
             case 155:
                 // float platforms can now be extremley high  ie cant jump over some
-                delayMin = 950;
-                delayMax = 1250;
-                obstacleVel = 15;
+                delayMin = 700;
+                delayMax = 1300;
+                obstacleVel = 14;
                 break;
             case 300:
-                obstacleVel = 16;
+                obstacleVel = 17;
                 break;
         }
         obstacleDelayer.stop();
@@ -316,7 +320,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         }
         if (p.getYOrd() != 500) return;
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
-            p.setVelY(-5);
+            p.setVelY(-6);
         }
     }
 
@@ -328,7 +332,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         }
         if (p.getYOrd() != 500) return;
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
-            p.setVelY(-5);
+            p.setVelY(-6);
         }
     }
 }
