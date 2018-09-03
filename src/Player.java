@@ -5,8 +5,8 @@ import java.awt.Color;
 
 public class Player extends JLabel{
 
-    private final static int playerLength = 50;
-    private final static int playerHeight = 50;
+    private int playerLength = 50;
+    private int playerHeight = 50;
     private int x = 20, y = 500, velY = 0;
 
     public Player() {
@@ -33,6 +33,8 @@ public class Player extends JLabel{
     public int getPlayerHeight() {
         return playerHeight;
     }
+
+    public void setPlayerHeight(int h) { this.playerHeight = h; }
 
     public int getXOrd() {
         return x;
