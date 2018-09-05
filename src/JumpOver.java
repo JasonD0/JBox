@@ -22,6 +22,7 @@ public class JumpOver extends JFrame implements Runnable {
         boxLayout = new Box(BoxLayout.Y_AXIS);
         JumpOverLayout jpl = new JumpOverLayout(this);
         boxLayout.add(jpl);
+
         setContentPane(boxLayout);
 
         pack();

@@ -5,9 +5,10 @@ import java.awt.Color;
 
 public class Player extends JLabel{
 
+    private final static int PLATFORM = 550;
     private int playerLength = 50;
     private int playerHeight = 50;
-    private int x = 20, y = 500, velY = 0;
+    private int x = 50, y = 500, velY = 0;
 
     public Player() {
         initPlayer();
@@ -54,4 +55,25 @@ public class Player extends JLabel{
     public void setVelY(int velY) {
         this.velY = velY;
     }
+
+/*    public void movePlayer() {
+
+        if (y < 240) {
+            velY = 6;
+            y = 242;
+        }
+        // create small delay at apex of jump
+        else if (y <= 252 && velY > 0) {
+            velY = 4;
+        }
+        else if (y < 399 && velY > 0) {
+            velY = 6;
+        }
+        else if (y > PLATFORM - playerHeight) {
+            velY = 0;
+            y = PLATFORM - playerHeight;
+        }
+        y += velY;
+
+    }*/
 }
