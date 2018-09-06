@@ -9,26 +9,28 @@ import java.util.Iterator;
 import java.util.Random;
 
 public class JumpOverLayout extends JPanel implements ActionListener, KeyListener {
-
     private Timer obstacleDelayer; // delays new obstacles
     private Timer gameTimer;        // survival time
     private Timer t =  new Timer(5, this);      // activator for actionperformed
     private Timer delay;           // delay before speed increase
-    private ArrayList<Obstacle> obstacles;
-    private Player p;
-    private User u;
-    private boolean endGame = false;    // quick way to prevent concurrency (clearing list when list currently being modified)
-    private int counter;
     private JumpOver game;
     private Random rand;
-    private int delayMin, delayMax;
+    private Player p;
+    private User u;
+    private ArrayList<Obstacle> obstacles;
     private int obstacleLength, obstacleHeight, obstacleVel;
-    private int PLAYER_VEL = 7;
+    private int delayMin, delayMax;
+    private int counter;
+    private boolean instructions = true;
+    private boolean endGame = false;    // quick way to prevent concurrency (clearing list when list currently being modified)
+    private boolean paused = false;
     private final static int GAME_LENGTH = 1000;
     private final static int GAME_HEIGHT = 550;
     private final static int PLAYER_HEIGHT = 50;
-    private boolean instructions = true;
-    private boolean paused = false;
+    private final static Color ORANGE = new Color(255, 153, 0);
+    private final static Color LIGHT_GRAY = new Color(51, 51, 51);
+    private final static Color DARK_GRAY = new Color(45, 45, 45);
+    private int PLAYER_VEL = 10;
 
     public JumpOverLayout(JumpOver g) {
         game = g;
@@ -39,14 +41,13 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
     }
 
     private void init() {
-        setBackground(new Color(51, 51, 51));
+        setBackground(LIGHT_GRAY);
         setFocusTraversalKeysEnabled(false);
         setFocusable(true);
         setVisible(true);
         addKeyListener(this);
         setLayout(new BorderLayout());
 
-        //add(p, BorderLayout.WEST);
         add(initHeader(), BorderLayout.NORTH);
         add(initPlatform(), BorderLayout.SOUTH);
 
@@ -54,7 +55,6 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         initObstacles();
         initSpeedIncreaseDelayer();
 
-        //t.start();
         startTimers();
     }
 
@@ -66,7 +66,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         header.setMinimumSize(new Dimension(1000, 95));
         header.setPreferredSize(new Dimension(1000,95));
         header.setFont(new Font(null, Font.BOLD, 20));
-        header.setForeground(new Color(255, 153, 0));
+        header.setForeground(ORANGE);
         return header;
     }
 
@@ -75,30 +75,31 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         platform.setMaximumSize(new Dimension(1000, 113));
         platform.setMinimumSize(new Dimension(1000, 113));
         platform.setPreferredSize(new Dimension(1000,113));
-        platform.setBorder(BorderFactory.createMatteBorder(5, 0, 0, 0, new Color(255, 153, 0)));
+        platform.setBorder(BorderFactory.createMatteBorder(10, 0, 0, 0, ORANGE));
         return platform;
     }
 
     private void initObstacles() {
-        delayMin = 975;
-        delayMax = 2000;
-        obstacleVel = 5;
+        defineObstacle(975, 2000, 10);
         obstacles = new ArrayList<>();
         obstacleDelayer = new Timer(2000, new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                int prob = rand.nextInt(100) + 1;
-                int y = (counter < 35) ? 0 : (prob <= 30) ? rand.nextInt(50 - 26 + 1) + 26 : 0;
-                obstacleHeight = (counter < 85) ? 50 : (prob <= 30) ? rand.nextInt(150 + (100 - prob) - 50 + 1) + 50 : rand.nextInt(150 - 50 + 1) + 50;
-                obstacleLength = (counter < 85) ? 100 : rand.nextInt(250 - 100 + 1) + 100;
+                int prob = my_rand(100, 1);
+                int y = (counter < 35) ? 0 : (prob <= 30) ? my_rand(50, 26) : 0;
+                obstacleHeight = (counter < 85) ? 50 : (prob <= 30) ? my_rand(150, 100 - prob) : my_rand(150,50);
+                obstacleLength = (counter < 85) ? 100 : my_rand(250, 100);
                 Obstacle o = new Obstacle(GAME_LENGTH, GAME_HEIGHT - obstacleHeight - y, obstacleVel, obstacleLength, obstacleHeight);
                 obstacles.add(o);
-                int v = rand.nextInt(delayMax - delayMin + 1) + delayMin;
+                int v = my_rand(delayMax, delayMin);
                 obstacleDelayer.setDelay(v);
             }
         });
     }
 
+    /**
+     * Creates delay before obstacle speed increases to avoid collision between obstacles
+     */
     private void initSpeedIncreaseDelayer() {
         delay = new Timer(1000, new ActionListener(){
             @Override
@@ -145,9 +146,9 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
 
     private void drawObstacles(Graphics g) {
         for (Obstacle o : obstacles) {
-            g.setColor(new Color(45,45,45));
+            g.setColor(DARK_GRAY);
             g.fillRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
-            g.setColor(new Color(255, 153, 0));
+            g.setColor(ORANGE);
             g.drawRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
         }
     }
@@ -163,19 +164,14 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         g2d.setColor(Color.WHITE);
         if (counter < 5) g2d.drawString("PRESS UP OR SPACE TO JUMP", 300, 225);
         else if (counter >= 35 && counter < 40) g2d.drawString("PRESS DOWN TO DUCK", 333, 225);
-        else if (counter >= 85 && counter < 90) g2d.drawString("OBSTACLES WILL NOW HAVE RANDOM DIMENSIONS", 170, 225);
         else instructions = false;
     }
 
-    /**
-     * Invoked when an action occurs.
-     *
-     * @param e the event to be processed
-     */
     @Override
     public void actionPerformed(ActionEvent e) {
         requestFocusInWindow();
         Iterator<Obstacle> itr = obstacles.iterator();
+        // check all obstacles for collision and remove obstacles that are not on the screen
         while (itr.hasNext() && endGame != false) {
             Obstacle o = itr.next();
             if (!o.inFrame()) {
@@ -193,23 +189,25 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
     private void movePlayer() {
         int y = p.getYOrd();
         int velY = p.getVelY();
+        // player's maximum jump height
         if (y < 240) {
             p.setVelY(PLAYER_VEL + 1);
             p.setYord(242);
         }
         // create small delay at apex of jump
         else if (y <= 252 && velY > 0) {
-            p.setVelY(PLAYER_VEL - 1);
+            p.setVelY(PLAYER_VEL - 2);
         }
+        // remove the small delay
         else if (y < 399 && velY > 0) {
             p.setVelY(PLAYER_VEL + 1);
         }
+        // stop player from falling below platform
         else if (y > GAME_HEIGHT - p.getPlayerHeight()) {
             p.setVelY(0);
             p.setYord(GAME_HEIGHT - p.getPlayerHeight());
         }
         p.setYord(p.getYOrd() + p.getVelY());
-
     }
 
     private boolean checkCollision(Obstacle o) {
@@ -228,32 +226,27 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         }
     }
 
+    /**
+     * Change rate of obstacle creation at arbitrary times
+     */
     private void changeObstacleDelay() {
         switch (counter) {
             case 15:
-                delayMin = 750;
-                delayMax = 1450;
-                obstacleVel = 7;
+                defineObstacle(900, 1550, 12);
                 break;
             case 35:
-                delayMin = 850;
-                delayMax = 1200;
-                obstacleVel = 10;
+                defineObstacle(850, 1400, 15);
                 break;
             case 85:
-                delayMin = 850;
-                delayMax = 1300;
-                obstacleVel = 12;
+                defineObstacle(750, 1450, 21);
                 break;
             case 155:
-                delayMin = 850;
-                delayMax = 1350;
-                obstacleVel = 14;
+                defineObstacle(750, 1550, 25);
+                PLAYER_VEL = 12;
                 break;
             case 300:
-                delayMin = 950;
-                delayMax = 1450;
-                obstacleVel = 17;
+                defineObstacle(800, 1450, 30);
+                PLAYER_VEL = 14;
                 break;
         }
         obstacleDelayer.stop();
@@ -261,17 +254,16 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
     }
 
     @Override
-    public void keyTyped(KeyEvent e) {}
-
-    @Override
     public void keyPressed(KeyEvent e) {
-        if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return;
+        if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return;   // check player on platform
+        // player crouched
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
             if (p.getPlayerHeight() == PLAYER_HEIGHT) {
                 p.setPlayerHeight(p.getPlayerHeight()/2);
                 p.setYord(p.getYOrd() + p.getPlayerHeight());
             }
         }
+        // player jumped
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
             p.setVelY(-PLAYER_VEL);
         }
@@ -279,10 +271,11 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
 
     @Override
     public void keyReleased(KeyEvent e) {
+        // pausing game
         if (e.getKeyCode() == KeyEvent.VK_P) {
             if (!paused) {
                 paused = true;
-                int v = rand.nextInt(delayMax - delayMin + 1) + delayMin;
+                int v = my_rand(delayMax, delayMin);
                 obstacleDelayer.setInitialDelay(v);
                 stopTimers();
             } else {
@@ -290,38 +283,29 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
                 startTimers();
             }
         }
-        if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return;
+        if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return; // check player on platform
+        // player crouched
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
            if (p.getPlayerHeight() < PLAYER_HEIGHT) {
                p.setPlayerHeight(PLAYER_HEIGHT);
                p.setYord(p.getYOrd() + p.getPlayerHeight());
            }
         }
-     //   p.setPlayerHeight(PLAYER_HEIGHT);
+        // player jumped
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
             p.setVelY(-PLAYER_VEL);
         }
     }
 
-    private void stopTimers() {
-        t.stop();
-        obstacleDelayer.stop();
-        gameTimer.stop();
-    }
-
-    private void startTimers() {
-        t.start();
-        obstacleDelayer.start();
-        gameTimer.start();
-    }
-
-
+    /**
+     * Create end of game screen
+     */
     private void endGame() {
         System.out.println("Game Over");
         u.setHighScore(counter);
         stopTimers();
-        UIManager.put("Panel.background", new Color(51, 51, 51));
-        UIManager.put("OptionPane.background", new Color(51, 51, 51));
+        UIManager.put("Panel.background", LIGHT_GRAY);
+        UIManager.put("OptionPane.background", LIGHT_GRAY);
 
         JOptionPane pane = new JOptionPane();
         JDialog dialog = pane.createDialog("Game Over!");
@@ -348,7 +332,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
     private JButton createButton(String option, JDialog dialog) {
         JButton b = new JButton(option);
         b.setFocusable(false);
-        b.setBackground(new Color(45, 45, 45));
+        b.setBackground(DARK_GRAY);
         b.setForeground(Color.WHITE);
         b.setContentAreaFilled(false);
         b.addActionListener(new ActionListener(){
@@ -364,7 +348,6 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
                     case "Retry":
                         u.getHighScore();
                         removeObstacles();
-                        obstacleVel = 5;
                         obstacleDelayer.setInitialDelay(2000);
                         startTimers();
                         instructions = true;
@@ -378,4 +361,29 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         b.setIcon(new ImageIcon(icon));
         return b;
     }
+
+    private int my_rand(int upper, int lower) {
+        return rand.nextInt(upper - lower + 1) + lower;
+    }
+
+    private void defineObstacle(int delayMin, int delayMax, int obstacleVel) {
+        this.delayMin = delayMin;
+        this.delayMax = delayMax;
+        this.obstacleVel = obstacleVel;
+    }
+
+    private void stopTimers() {
+        t.stop();
+        obstacleDelayer.stop();
+        gameTimer.stop();
+    }
+
+    private void startTimers() {
+        t.start();
+        obstacleDelayer.start();
+        gameTimer.start();
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {}
 }
