@@ -72,10 +72,12 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
 
     private JLabel initPlatform() {
         JLabel platform = new JLabel();
+        platform.setBorder(BorderFactory.createMatteBorder(10, 0, 0, 0, ORANGE));
+        platform.setBackground(LIGHT_GRAY);
         platform.setMaximumSize(new Dimension(1000, 113));
         platform.setMinimumSize(new Dimension(1000, 113));
         platform.setPreferredSize(new Dimension(1000,113));
-        platform.setBorder(BorderFactory.createMatteBorder(10, 0, 0, 0, ORANGE));
+        platform.setOpaque(true);
         return platform;
     }
 
@@ -120,7 +122,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
                 counter++;
                 timer.setText("Time    " + counter);
                 if (counter == 15 || counter == 35 || counter == 85 || counter == 155 || counter == 300) changeObstacleDelay();
-                if (counter == 0 || counter == 35 || counter == 85) instructions = true;
+                if (counter == 0 || counter == 15 || counter == 35 || counter == 85) instructions = true;
             }
         });
     }
@@ -163,6 +165,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         g2d.setFont(new Font(null, Font.BOLD, 25));
         g2d.setColor(Color.WHITE);
         if (counter < 5) g2d.drawString("PRESS UP OR SPACE TO JUMP", 300, 225);
+        else if (counter >= 15 && counter < 20) g2d.drawString("Press P TO PAUSE/UNPAUSE", 300, 225);
         else if (counter >= 35 && counter < 40) g2d.drawString("PRESS DOWN TO DUCK", 333, 225);
         else instructions = false;
     }
@@ -232,20 +235,20 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
     private void changeObstacleDelay() {
         switch (counter) {
             case 15:
-                defineObstacle(900, 1550, 12);
+                defineObstacle(850, 1550, 12);
                 break;
             case 35:
-                defineObstacle(850, 1400, 15);
+                defineObstacle(750, 1350, 17);
                 break;
             case 85:
-                defineObstacle(750, 1450, 21);
+                defineObstacle(800, 1400, 21);
                 break;
             case 155:
-                defineObstacle(750, 1550, 25);
+                defineObstacle(750, 1350, 25);
                 PLAYER_VEL = 12;
                 break;
             case 300:
-                defineObstacle(800, 1450, 30);
+                defineObstacle(800, 1400, 30);
                 PLAYER_VEL = 14;
                 break;
         }
@@ -275,7 +278,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         if (e.getKeyCode() == KeyEvent.VK_P) {
             if (!paused) {
                 paused = true;
-                int v = my_rand(delayMax, delayMin);
+                int v = my_rand(delayMax, delayMin) - 200;
                 obstacleDelayer.setInitialDelay(v);
                 stopTimers();
             } else {
