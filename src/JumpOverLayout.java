@@ -1,5 +1,20 @@
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JPanel;
+import javax.swing.JLabel;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.JDialog;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.Timer;
+import javax.swing.ImageIcon;
+import javax.swing.BorderFactory;
+import java.awt.Dimension;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.BorderLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -165,7 +180,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         g2d.setFont(new Font(null, Font.BOLD, 25));
         g2d.setColor(Color.WHITE);
         if (counter < 5) g2d.drawString("PRESS UP OR SPACE TO JUMP", 300, 225);
-        else if (counter >= 15 && counter < 20) g2d.drawString("Press P TO PAUSE/UNPAUSE", 300, 225);
+        else if (counter >= 15 && counter < 20) g2d.drawString("PRESS P TO PAUSE/UNPAUSE", 300, 225);
         else if (counter >= 35 && counter < 40) g2d.drawString("PRESS DOWN TO DUCK", 333, 225);
         else instructions = false;
     }
@@ -238,17 +253,17 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
                 defineObstacle(850, 1550, 12);
                 break;
             case 35:
-                defineObstacle(750, 1350, 17);
+                defineObstacle(750, 1250, 18);
                 break;
             case 85:
-                defineObstacle(800, 1400, 21);
+                defineObstacle(800, 1400, 22);
                 break;
             case 155:
-                defineObstacle(750, 1350, 25);
+                defineObstacle(750, 1350, 26);
                 PLAYER_VEL = 12;
                 break;
             case 300:
-                defineObstacle(800, 1400, 30);
+                defineObstacle(850, 1400, 32);
                 PLAYER_VEL = 14;
                 break;
         }
@@ -268,6 +283,10 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         }
         // player jumped
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
+            if (p.getPlayerHeight() < PLAYER_HEIGHT) {
+                p.setPlayerHeight(PLAYER_HEIGHT);
+                p.setYord(p.getYOrd() + p.getPlayerHeight());
+            }
             p.setVelY(-PLAYER_VEL);
         }
     }
@@ -286,14 +305,12 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
                 startTimers();
             }
         }
-        if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return; // check player on platform
-        // player crouched
-        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-           if (p.getPlayerHeight() < PLAYER_HEIGHT) {
-               p.setPlayerHeight(PLAYER_HEIGHT);
-               p.setYord(p.getYOrd() + p.getPlayerHeight());
-           }
+        if (p.getPlayerHeight() < PLAYER_HEIGHT) {
+           p.setPlayerHeight(PLAYER_HEIGHT);
+           p.setYord(p.getYOrd() + p.getPlayerHeight());
         }
+        if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return; // check player on platform
+
         // player jumped
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
             p.setVelY(-PLAYER_VEL);
@@ -352,6 +369,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
                         u.getHighScore();
                         removeObstacles();
                         obstacleDelayer.setInitialDelay(2000);
+                        initObstacles();
                         startTimers();
                         instructions = true;
                         break;
