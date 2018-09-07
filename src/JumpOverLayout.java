@@ -273,6 +273,10 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if (p.getPlayerHeight() < PLAYER_HEIGHT && p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) {
+            p.setPlayerHeight(PLAYER_HEIGHT);
+            p.setYord(p.getYOrd() + p.getPlayerHeight());
+        }
         if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return;   // check player on platform
         // player crouched
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
@@ -293,6 +297,10 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
 
     @Override
     public void keyReleased(KeyEvent e) {
+        if (p.getPlayerHeight() < PLAYER_HEIGHT) {
+           p.setPlayerHeight(PLAYER_HEIGHT);
+           p.setYord(p.getYOrd() + p.getPlayerHeight());
+        }
         // pausing game
         if (e.getKeyCode() == KeyEvent.VK_P) {
             if (!paused) {
@@ -304,10 +312,6 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
                 paused = false;
                 startTimers();
             }
-        }
-        if (p.getPlayerHeight() < PLAYER_HEIGHT) {
-           p.setPlayerHeight(PLAYER_HEIGHT);
-           p.setYord(p.getYOrd() + p.getPlayerHeight());
         }
         if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return; // check player on platform
 
