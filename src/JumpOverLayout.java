@@ -275,7 +275,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
     public void keyPressed(KeyEvent e) {
         if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return;   // check player on platform
         // player jumped
-        if ((e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) && p.getPlayerHeight() < PLAYER_HEIGHT) {
+        if ((e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) && p.getPlayerHeight() == PLAYER_HEIGHT) {
             if (p.getPlayerHeight() < PLAYER_HEIGHT) {
                 p.setPlayerHeight(PLAYER_HEIGHT);
                 p.setYord(p.getYOrd() + p.getPlayerHeight());
