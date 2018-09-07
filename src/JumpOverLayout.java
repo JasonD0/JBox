@@ -273,30 +273,27 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (p.getPlayerHeight() < PLAYER_HEIGHT && p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) {
-            p.setPlayerHeight(PLAYER_HEIGHT);
-            p.setYord(p.getYOrd() + p.getPlayerHeight());
-        }
         if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return;   // check player on platform
-        // player crouched
-        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            if (p.getPlayerHeight() == PLAYER_HEIGHT) {
-                p.setPlayerHeight(p.getPlayerHeight()/2);
-                p.setYord(p.getYOrd() + p.getPlayerHeight());
-            }
-        }
         // player jumped
-        if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
+        if ((e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) && p.getPlayerHeight() < PLAYER_HEIGHT) {
             if (p.getPlayerHeight() < PLAYER_HEIGHT) {
                 p.setPlayerHeight(PLAYER_HEIGHT);
                 p.setYord(p.getYOrd() + p.getPlayerHeight());
             }
             p.setVelY(-PLAYER_VEL);
         }
+        // player crouched
+        else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+            if (p.getPlayerHeight() == PLAYER_HEIGHT) {
+                p.setPlayerHeight(p.getPlayerHeight()/2);
+                p.setYord(p.getYOrd() + p.getPlayerHeight());
+            }
+        }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
+        // change player height back to original
         if (p.getPlayerHeight() < PLAYER_HEIGHT) {
            p.setPlayerHeight(PLAYER_HEIGHT);
            p.setYord(p.getYOrd() + p.getPlayerHeight());
@@ -316,7 +313,7 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
         if (p.getYOrd() != GAME_HEIGHT - p.getPlayerHeight()) return; // check player on platform
 
         // player jumped
-        if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) {
+        if ((e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_SPACE) && p.getPlayerHeight() == PLAYER_HEIGHT) {
             p.setVelY(-PLAYER_VEL);
         }
     }
@@ -374,8 +371,9 @@ public class JumpOverLayout extends JPanel implements ActionListener, KeyListene
                         removeObstacles();
                         obstacleDelayer.setInitialDelay(2000);
                         initObstacles();
-                        startTimers();
+                        p.setPlayerHeight(PLAYER_HEIGHT);
                         instructions = true;
+                        startTimers();
                         break;
                 }
             }
