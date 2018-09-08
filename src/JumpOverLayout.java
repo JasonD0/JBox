@@ -32,7 +32,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
     private final static Color DARK_GRAY = new Color(45, 45, 45);
     private int PLAYER_VEL = 10;//7;
     private final static int VEL_ADJUSTMENT = 0;    // temp solution to inconsistent frame rates
-    private boolean running = true;
+    private boolean running = false;
     private Thread t;
 
     public JumpOverLayout(JumpOver g) {
@@ -60,8 +60,24 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
 
         startTimers();
 
+        start();
+    }
+
+    private synchronized void start() {
+        if (running) return;
+        running = true;
         t = new Thread(this);
         t.start();
+    }
+
+    private synchronized void stop() {
+        if (!running) return;
+        running = false;
+        try {
+            t.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private JLabel initHeader() {
@@ -357,6 +373,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
                 dialog.dispose();
                 switch (option) {
                     case "Exit":
+                        running = false;
                         game.dispose();
                         System.exit(0);
                         break;
@@ -368,6 +385,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
                         p.setPlayerHeight(PLAYER_HEIGHT);
                         instructions = true;
                         startTimers();
+                        running = true;
                         break;
                 }
             }
@@ -404,6 +422,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
     @Override
     public void run() {
         // game loop
+        System.out.println("dsada");
         long lastTime = System.nanoTime();
         final double fps = 60.0;
         final double updateInterval = 1000000000 / fps;
@@ -425,11 +444,13 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
             }
             repaint();
             try {
+                if ((lastTime - System.nanoTime() + updateInterval)/1000000 < 0) continue;
                 Thread.sleep((long)(lastTime - System.nanoTime() + updateInterval)/1000000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
+        stop();
     }
 
     @Override
