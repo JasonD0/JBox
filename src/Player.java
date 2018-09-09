@@ -5,12 +5,12 @@ import java.awt.Color;
 
 public class Player extends JLabel{
 
-    private final static int PLATFORM = 550;
     private int playerLength = 50;
     private int playerHeight = 50;
     private int x = 50, y = 500, velY = 0;
 
-    public Player() {
+    public Player(int y) {
+        this.y = y;
         initPlayer();
     }
 

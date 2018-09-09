@@ -16,23 +16,25 @@ import java.awt.event.MouseEvent;
 
 public class JumpOver extends JFrame implements ActionListener {
     private static final int LENGTH = 1000;
-    private static final int HEIGHT = 600;  //1030 multiplayer
+    private static int HEIGHT = 535;  //1000 multiplayer     535 single
     private static final String TITLE = "JumpOver";
     private boolean highlight = false;
     private Timer t = new Timer(10, this);
     private Box boxLayout;
     private JPanel panel;
     private JButton b;
+    private static boolean mp = true;
 
     public static void main(String[] arg) {
         JumpOver game = new JumpOver();
         //SwingUtilities.invokeLater(game);
+        HEIGHT = (mp) ? 1000 : HEIGHT;
         game.setTitle(TITLE);
         game.setPreferredSize(new Dimension(LENGTH, HEIGHT));
         game.setFocusable(true);
 
         Box boxLayout = new Box(BoxLayout.Y_AXIS);
-        JumpOverLayout jpl = new JumpOverLayout(game);
+        JumpOverLayout jpl = new JumpOverLayout(game, mp);
         boxLayout.add(jpl);
         game.setContentPane(boxLayout);
 
