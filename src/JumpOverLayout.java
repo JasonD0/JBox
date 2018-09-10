@@ -38,6 +38,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
     private boolean instructions = true;
     private boolean endGame = false;    // quick way to prevent concurrency (clearing list when list currently being modified)
     private boolean paused = false;
+    private boolean exited = false;     // exited jumpover game
     private final static int GAME_LENGTH = 1000;
     private final static int GAME_HEIGHT1 = 450;
     private final static int GAME_HEIGHT2 = 916;
@@ -468,15 +469,16 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
         message.setFont(new Font(null, Font.BOLD, 20));
 
         JButton retry = createButton("Retry", dialog);
+        JButton home = createButton("Home", dialog);
         JButton exit = createButton("Exit", dialog);
-        Object option[] = {retry, exit};
+        Object option[] = {retry, home, exit};
 
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(message, BorderLayout.CENTER);
         pane.setMessage(panel);
         pane.setOptions(option);
 
-        dialog.setSize(new Dimension(300, 170));
+        dialog.setSize(new Dimension(350, 170));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
     }
@@ -496,8 +498,14 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
                     case "Exit":
                         running = false;
                         game.dispose();
+                        stop();
                         System.exit(0);
                         break;
+                    case "Home":
+                        running = false;
+                        exited = true;
+                        stop();
+                        game.setHome();
                     case "Retry":
                         u.getHighScore();
                         instructions = true;
@@ -553,6 +561,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
         double delta = 0;
         // game loop
         while (running) {
+            if (exited) break;
             long now = System.nanoTime();
             /*if (now - lastTime > 1000000000) lastTime = now;
             double updates = (now - lastTime) / updateInterval;
@@ -562,13 +571,12 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
             }*/
             delta += (now - lastTime)/updateInterval;
             lastTime = now;
-            if (p1_dead > 0 && p2_dead > 0) continue;
+
             if (delta >= 1) {
-                if (p1_dead > 0 && p2_dead > 0) continue;
                 actionPerformed();
                 delta--;
             }
-            if (p1_dead > 0 && p2_dead > 0) continue;
+
             repaint();
             try {
                 if ((lastTime - System.nanoTime() + updateInterval)/1000000 < 0) continue;
