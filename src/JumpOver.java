@@ -14,84 +14,56 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class JumpOver extends JFrame implements ActionListener {
+public class JumpOver extends JFrame {
     private static final int LENGTH = 1000;
     private static int HEIGHT = 535;  //1000 multiplayer     535 single
     private static final String TITLE = "JumpOver";
-    private boolean highlight = false;
-    private Timer t = new Timer(10, this);
-    private Box boxLayout;
-    private JPanel panel;
-    private JButton b;
-    private static boolean mp = true;
+    private static Box boxLayout;
+    private static boolean mp = false;
 
-    public static void main(String[] arg) {
-        JumpOver game = new JumpOver();
-        //SwingUtilities.invokeLater(game);
-        HEIGHT = (mp) ? 1000 : HEIGHT;
-        game.setTitle(TITLE);
-        game.setPreferredSize(new Dimension(LENGTH, HEIGHT));
-        game.setFocusable(true);
-
-        Box boxLayout = new Box(BoxLayout.Y_AXIS);
-        JumpOverLayout jpl = new JumpOverLayout(game, mp);
-        boxLayout.add(jpl);
-        game.setContentPane(boxLayout);
-
-        game.pack();
-        game.setVisible(true);
-        game.setResizable(false);
-        game.setLocationRelativeTo(null);
-        game.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    public JumpOver() {
+        init();
     }
-/*
-    @Override
-    public void run() {
-        //t.start();
+
+    private void init() {
         setTitle(TITLE);
         setPreferredSize(new Dimension(LENGTH, HEIGHT));
         setFocusable(true);
 
         boxLayout = new Box(BoxLayout.Y_AXIS);
-
-        b = new JButton("Dsad");
-        b.setFocusable(false);
-        //b.setContentAreaFilled(false);
-        //setLayout(new BorderLayout());
-        panel = new JPanel() {
-            public void paintComponent(Graphics g) {
-                g.fillRect(100, 200, 100, 100);
-                if (highlight) {
-                    b.setBackground(Color.BLACK);
-                } else {
-                    b.setBackground(Color.GREEN);
-                }
-            }
-        };
-        panel.setLayout(new BorderLayout());
-        panel.setBackground(Color.BLUE);
-        //b.addMouseMotionListener();
-        //panel.add(b, 2);
-
-
-        //add(panel, BorderLayout.CENTER);
-        JumpOverLayout jpl = new JumpOverLayout(this);
-        boxLayout.add(jpl);
-        setContentPane(boxLayout);
-        //add(panel);
+        setHome();
 
         pack();
-        setVisible(true);
         setResizable(false);
+        setVisible(true);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    }*/
+    }
 
-    /**
-     * Invoked when an action occurs.
-     *
-     * @param e the event to be processed
-     */
+    public void setHome() {
+        boxLayout.removeAll();
+        setPreferredSize(new Dimension(LENGTH, HEIGHT));
+        setMaximumSize(new Dimension(LENGTH, HEIGHT));
+        setMinimumSize(new Dimension(LENGTH, HEIGHT));
+        HomePage hp = new HomePage(this);
+        boxLayout.add(hp);
+        setLocationRelativeTo(null);
+        setContentPane(boxLayout);
+    }
+
+    public void setJumpOver() {
+        boxLayout.removeAll();
+        HEIGHT = (mp) ? 1000 : HEIGHT;
+        setPreferredSize(new Dimension(LENGTH, HEIGHT));
+        setMaximumSize(new Dimension(LENGTH, HEIGHT));
+        setMinimumSize(new Dimension(LENGTH, HEIGHT));
+        JumpOverLayout jpl = new JumpOverLayout(this, mp);
+        boxLayout.add(jpl);
+        setLocationRelativeTo(null);
+        setContentPane(boxLayout);
+    }
+
+    /*
     @Override
     public void actionPerformed(ActionEvent e) {
         Rectangle bp = b.getBounds();
@@ -100,5 +72,12 @@ public class JumpOver extends JFrame implements ActionListener {
             highlight = bp.contains(mp);
         }
         repaint();
+    }*/
+
+    public static void main(String[] arg) {
+      //  EventQueue.invokeLater(() -> {
+            JumpOver game = new JumpOver();
+          //  game.setVisible(true);
+        //});
     }
 }

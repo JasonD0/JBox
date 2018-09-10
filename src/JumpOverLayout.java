@@ -1,4 +1,13 @@
-import javax.swing.*;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+import javax.swing.JButton;
+import javax.swing.SwingConstants;
+import javax.swing.JDialog;
+import javax.swing.UIManager;
+import javax.swing.JLabel;
+import javax.swing.ImageIcon;
+import javax.swing.BorderFactory;
+import javax.swing.JOptionPane;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Color;
@@ -33,7 +42,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
     private final static int GAME_HEIGHT1 = 450;
     private final static int GAME_HEIGHT2 = 916;
     private final static int PLAYER_HEIGHT = 50;
-    private final static Color ORANGE = new Color(255, 153, 0);
+    private final static Color AQUA = new Color(127, 255, 212);
     private final static Color LIGHT_GRAY = new Color(51, 51, 51);
     private final static Color DARK_GRAY = new Color(45, 45, 45);
     private int PLAYER_VEL = 10;
@@ -57,6 +66,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
     private void init() {
         setBackground(LIGHT_GRAY);
         setFocusTraversalKeysEnabled(false);
+        setRequestFocusEnabled(true);
         setFocusable(true);
         setVisible(true);
         addKeyListener(this);
@@ -64,7 +74,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
         setLayout(new BorderLayout());
         add(initPlatform(), BorderLayout.SOUTH);
         if (multiplayer) add(initHeader(Color.CYAN), BorderLayout.CENTER);
-        add(initHeader(ORANGE), BorderLayout.NORTH);
+        add(initHeader(AQUA), BorderLayout.NORTH);
 
         initGameTime();
         initObstacles();
@@ -108,7 +118,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
 
     private JLabel initPlatform() {
         JLabel platform = new JLabel();
-        Color c = (multiplayer) ? Color.CYAN : ORANGE;
+        Color c = (multiplayer) ? Color.CYAN : AQUA;
         platform.setBorder(BorderFactory.createMatteBorder(10, 0, 0, 0, c));
         platform.setMaximumSize(new Dimension(1000, 45));
         platform.setMinimumSize(new Dimension(1000, 45));
@@ -171,7 +181,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
         drawHeader(g);
         if (instructions) drawInstructions(g);
         if (p1_dead > 0) drawGameOver(g, 225);
-        if (p2_dead > 0) drawGameOver(g, 675);
+        if (multiplayer && p2_dead > 0) drawGameOver(g, 675);
         drawObstacles(g);
         // hides glitching player
         g.setColor(LIGHT_GRAY);
@@ -186,7 +196,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
     }
 
     private void drawPlatform(Graphics g) {
-        g.setColor(ORANGE);
+        g.setColor(AQUA);
         g.fillRect(0, 450, 1000, 10);
     }
 
@@ -212,7 +222,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
             if (p1_dead == -1) {
                 g.setColor(DARK_GRAY);
                 g.fillRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
-                g.setColor(ORANGE);
+                g.setColor(AQUA);
                 g.drawRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
             }
             if (multiplayer && p2_dead == -1) {
@@ -273,7 +283,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
                 }
                 if (p1_dead == -1) {
                     if (checkCollision(o, p1, 0)) {
-                        if (p2_dead > 0) o.move();
+                        if ((multiplayer && p2_dead > 0) || !multiplayer) o.move();
                     } else {
                         p1_dead = counter;
                     }
