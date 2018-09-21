@@ -1,15 +1,20 @@
+package com.GameCenter;
+
+import com.GameCenter.Flappy.FlappyLayout;
+import com.GameCenter.GraviyShift.GravityShiftLayout;
 import javax.swing.JFrame;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import java.awt.Dimension;
+import com.GameCenter.JumpOver.*;
 
-public class JumpOver extends JFrame {
+public class GameCenter extends JFrame {
     private static final int LENGTH = 1000;
     private static int HEIGHT = 535;
     private static final String TITLE = "JumpOver";
     private static Box boxLayout;
 
-    public JumpOver() {
+    public GameCenter() {
         init();
     }
 
@@ -54,6 +59,29 @@ public class JumpOver extends JFrame {
         setContentPane(boxLayout);
     }
 
+    public void setFlappy() {
+        boxLayout.removeAll();
+        int height = (false) ? 1000 : HEIGHT;
+        setPreferredSize(new Dimension(LENGTH, height));
+        setMaximumSize(new Dimension(LENGTH, height));
+        setMinimumSize(new Dimension(LENGTH, height));
+        FlappyLayout fp = new FlappyLayout(this);
+        boxLayout.add(fp);
+        setLocationRelativeTo(null);
+        setContentPane(boxLayout);
+    }
+
+    public void setGravityShift() {
+        boxLayout.removeAll();
+        int height = (false) ? 1000 : HEIGHT;
+        setPreferredSize(new Dimension(LENGTH, height));
+        setMaximumSize(new Dimension(LENGTH, height));
+        setMinimumSize(new Dimension(LENGTH, height));
+        GravityShiftLayout gs = new GravityShiftLayout(this);
+        boxLayout.add(gs);
+        setLocationRelativeTo(null);
+        setContentPane(boxLayout);
+    }
     /*
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -67,7 +95,7 @@ public class JumpOver extends JFrame {
 
     public static void main(String[] arg) {
       //  EventQueue.invokeLater(() -> {
-            JumpOver game = new JumpOver();
+            GameCenter game = new GameCenter();
           //  game.setVisible(true);
         //});
     }

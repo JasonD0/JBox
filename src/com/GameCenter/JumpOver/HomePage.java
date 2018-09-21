@@ -1,3 +1,7 @@
+package com.GameCenter.JumpOver;
+
+import com.GameCenter.GameCenter;
+
 import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.Box;
@@ -20,11 +24,11 @@ public class HomePage extends JPanel {
     private final static Color DARK_GRAY = new Color(45, 45, 45);
     private final static Color AQUA = new Color(127, 255, 212);
     private boolean mp = false;
-    private JumpOver game;
-    private JButton jumpOver;
+    private GameCenter game;
+    private JButton jumpOver, flappy, gravityShift;
     private JButton exit;
 
-    public HomePage(JumpOver g) {
+    public HomePage(GameCenter g) {
         this.game = g;
         init();
     }
@@ -35,8 +39,14 @@ public class HomePage extends JPanel {
 
         jumpOver = createButton("JumpOver", null);
         exit = createButton("Exit!", null);
-        layout.add(Box.createRigidArea(new Dimension(0, 200)));
+        flappy = createButton("Flappy", null);
+        gravityShift = createButton("GravityShift", null);
+        layout.add(Box.createRigidArea(new Dimension(0, 150)));
         layout.add(jumpOver);
+        layout.add(Box.createRigidArea(new Dimension(0, 25)));
+        layout.add(gravityShift);
+        layout.add(Box.createRigidArea(new Dimension(0, 25)));
+        layout.add(flappy);
         layout.add(Box.createRigidArea(new Dimension(0, 25)));
         layout.add(exit);
         add(layout);
@@ -59,6 +69,12 @@ public class HomePage extends JPanel {
                     case "JumpOver":
                         initPlayers();
                         game.setJumpOver(mp);
+                        break;
+                    case "Flappy":
+                        game.setFlappy();
+                        break;
+                    case "GravityShift":
+                        game.setGravityShift();
                         break;
                     case "Exit!":
                         game.dispose();

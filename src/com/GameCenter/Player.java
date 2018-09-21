@@ -1,3 +1,5 @@
+package com.GameCenter;
+
 import javax.swing.JLabel;
 import java.awt.Rectangle;
 import java.awt.Dimension;
@@ -20,7 +22,6 @@ public class Player extends JLabel{
         setMaximumSize(new Dimension(100, 100));
         setMinimumSize(new Dimension(100, 100));
         setSize(new Dimension(100, 100));
-
     }
 
     public Rectangle getBoundary() {
@@ -46,7 +47,6 @@ public class Player extends JLabel{
     }
 
     public int getVelY() { return velY; }
-
 
     public void setYord(int y) {
         this.y = y;

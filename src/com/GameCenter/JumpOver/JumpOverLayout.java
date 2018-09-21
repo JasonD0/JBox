@@ -1,3 +1,9 @@
+package com.GameCenter.JumpOver;
+
+import com.GameCenter.GameCenter;
+
+import com.GameCenter.Obstacle;
+import com.GameCenter.Player;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import javax.swing.JButton;
@@ -27,7 +33,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
     private Timer obstacleDelayer; // delays new obstacles
     private Timer gameTimer;        // survival time
     private Timer delay;           // delay before speed increase
-    private JumpOver game;
+    private GameCenter game;
     private Random rand;
     private Player p1, p2;
     private User u;
@@ -54,7 +60,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
     private boolean multiplayer;
     private int p1_dead = -1, p2_dead = -1;
 
-    public JumpOverLayout(JumpOver g, boolean mp) {
+    public JumpOverLayout(GameCenter g, boolean mp) {
         game = g;
         multiplayer = mp;
         rand = new Random();
@@ -372,7 +378,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (paused) return;
+        if (multiplayer) return;
         // check player on platform
         if (p1.getYOrd() == GAME_HEIGHT1 - p1.getPlayerHeight()) {
             // player jumped

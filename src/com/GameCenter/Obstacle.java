@@ -1,3 +1,5 @@
+package com.GameCenter;
+
 import java.awt.Rectangle;
 
 public class Obstacle {
