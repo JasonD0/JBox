@@ -113,16 +113,8 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
                 //obstacleLength = (counter < 85) ? 100 : my_rand(250, 100);
                 //Obstacle o = new Obstacle(GAME_LENGTH, GAME_HEIGHT - obstacleHeight, obstacleVel, obstacleLength, obstacleHeight);
 
-                //addObstacles();
-                int totalObstacles = my_rand(5,1);
-                while (totalObstacles > 0) {
-                    int row = my_rand(6, 1) * 50;
-                    int x = rows.getOrDefault(rows, 0) + 1;
-                    rows.put(row, x);
-                    Obstacle o = new Obstacle(GAME_LENGTH + ((x - 1) * 350), GAME_HEIGHT - row, 5, 100, 50);
-                    obstacles.add(o);
-                    totalObstacles--;
-                }
+                addObstacles();
+
                 int v = my_rand(2000, 975);
                 obstacleDelayer.setDelay(v);
             }
@@ -130,7 +122,17 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
     }
 
     private void addObstacles() {
-
+        // low delay  instead of  below
+        int totalObstacles = my_rand(5,1);
+        // reserved list/queue   pop -> row -> add -> totalObstacles--  -> below
+        while (totalObstacles > 0) {
+            int row = my_rand(6, 1) * 50;
+            int x = rows.getOrDefault(rows, 0) + 1;
+            rows.put(row, x);
+            Obstacle o = new Obstacle(GAME_LENGTH + ((x - 1) * 350), GAME_HEIGHT - row, 10, 100, 50);
+            obstacles.add(o);
+            totalObstacles--;
+        }
     }
 
     private boolean checkCollision(Obstacle o, Player p) {
@@ -258,6 +260,7 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
             orientation = -1;
         }
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+            p1.setYord(roundNearest50(p1.getYOrd()) + 5);
             p1.setVelY(0);
         }
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
@@ -305,6 +308,15 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
         }
         stop();
 
+    }
+
+    private int roundNearest50(int num) {
+        int x = num/100;
+        int y = num%100;
+        int res = (y > 25) ? ((y < 75) ? x * 100 + 50 : x * 100 + 100) : x * 100;
+        // 623  ->  623/100 = 6   623%100 = 23    23 < 25  =>  6 * 100 = 600
+        // 868  ->  868/868 = 8   868%100 = 68    68 > 25  =>  68 < 75  =>  8*100 + 50 = 850
+        return res;
     }
 
     private int my_rand(int upper, int lower) {
