@@ -1,4 +1,4 @@
-package com.GameCenter.JumpOver;
+package com.GameCenter;
 
 import java.io.File;
 import java.io.FileNotFoundException;

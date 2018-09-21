@@ -3,7 +3,7 @@ package com.GameCenter.Flappy;
 import com.GameCenter.GameCenter;
 import com.GameCenter.Player;
 import com.GameCenter.Obstacle;
-import com.GameCenter.JumpOver.User;
+import com.GameCenter.User;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;

@@ -4,6 +4,7 @@ import com.GameCenter.GameCenter;
 
 import com.GameCenter.Obstacle;
 import com.GameCenter.Player;
+import com.GameCenter.User;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import javax.swing.JButton;
@@ -378,7 +379,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (multiplayer) return;
+        if (paused) return;
         // check player on platform
         if (p1.getYOrd() == GAME_HEIGHT1 - p1.getPlayerHeight()) {
             // player jumped
