@@ -10,18 +10,28 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.Timer;
+import javax.swing.UIManager;
 
 public class GravityShiftLayout extends JPanel implements KeyListener, Runnable {
     private final static Color AQUA = new Color(127, 255, 212);
@@ -31,11 +41,14 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
     private final static int GAME_LENGTH = 1000;
     private final static int PLAYER_VEL = 5;
     private ArrayList<Obstacle> obstacles;
+    private Map<Integer, Integer> rows;
     private Timer obstacleDelayer; // delays new obstacles
     private GameCenter game;
     private Player p1;
     private User u;
     private boolean running = false;
+    private boolean exited = false;
+    private boolean endGame = false;
     private Thread t;
     private Timer gameTimer;        // survival time
     private int counter;
@@ -45,7 +58,7 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
 
     public GravityShiftLayout(GameCenter g) {
         this.game = g;
-        p1 = new Player(250);
+        p1 = new Player(250, 150);
         rand = new Random();
         //u = new User();
         init();
@@ -80,9 +93,10 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
         add(initPlatform());
         add(Box.createRigidArea(new Dimension(0, 300)));
         add(initPlatform());
-        add(Box.createRigidArea(new Dimension(0, 91)));
+        add(Box.createRigidArea(new Dimension(0, 90)));
         initGameTime();
-        gameTimer.start();
+        initObstacles();
+        startTimers();
         setOpaque(true);
         start();
     }
@@ -90,19 +104,40 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
     private void initObstacles() {
         defineObstacle(975, 2000, 10);
         obstacles = new ArrayList<>();
+        rows = new HashMap<>();
         obstacleDelayer = new Timer(2000, new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                int prob = my_rand(100, 1);
-                int y = (counter < 35) ? 0 : (prob <= 30) ? my_rand(50, 26) : 0;
-                obstacleHeight = (counter < 85) ? 50 : (prob <= 30) ? my_rand(150, 100 - prob) : my_rand(150,50);
-                obstacleLength = (counter < 85) ? 100 : my_rand(250, 100);
-                Obstacle o = new Obstacle(GAME_LENGTH, GAME_HEIGHT - obstacleHeight - y, obstacleVel, obstacleLength, obstacleHeight);
-                obstacles.add(o);
+                //int prob = my_rand(100, 1);
+                //obstacleHeight = (counter < 85) ? 50 : (prob <= 30) ? my_rand(150, 100 - prob) : my_rand(150,50);
+                //obstacleLength = (counter < 85) ? 100 : my_rand(250, 100);
+                //Obstacle o = new Obstacle(GAME_LENGTH, GAME_HEIGHT - obstacleHeight, obstacleVel, obstacleLength, obstacleHeight);
+
+                //addObstacles();
+                int totalObstacles = my_rand(5,1);
+                while (totalObstacles > 0) {
+                    int row = my_rand(6, 1) * 50;
+                    int x = rows.getOrDefault(rows, 0) + 1;
+                    rows.put(row, x);
+                    Obstacle o = new Obstacle(GAME_LENGTH + ((x - 1) * 350), GAME_HEIGHT - row, 5, 100, 50);
+                    obstacles.add(o);
+                    totalObstacles--;
+                }
                 int v = my_rand(2000, 975);
                 obstacleDelayer.setDelay(v);
             }
         });
+    }
+
+    private void addObstacles() {
+
+    }
+
+    private boolean checkCollision(Obstacle o, Player p) {
+        return (p.getXOrd() + p.getPlayerLength() <= o.getX() ||
+                p.getXOrd() >= o.getX() + o.getLength() ||
+                p.getYOrd() + p.getPlayerHeight() <= o.getY() ||
+                p.getYOrd() >= o.getY() + o.getHeight());
     }
 
     private JLabel initHeader(Color c) {
@@ -154,6 +189,39 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
 
     private void actionPerformed() {
         requestFocusInWindow();
+        moveObject();
+        movePlayer();
+    }
+
+    private void moveObject() {
+        Iterator<Obstacle> itr = obstacles.iterator();
+        while (itr.hasNext() && endGame) {
+            Obstacle o = itr.next();
+            if (!o.inFrame() && endGame) {
+                int x = rows.getOrDefault(o.getY()/100, 0);
+                if (x > 0) rows.put(o.getY()/100, x-1);
+                itr.remove();
+            } else {
+                if (checkCollision(o, p1)) {
+                    o.move();
+                } else {
+                    endGame();
+                }
+            }
+        }
+        endGame = true;
+    }
+
+    private void removeObstacles() {
+        endGame = false;
+        Iterator<Obstacle> itr = obstacles.iterator();
+        while (itr.hasNext()) {
+            itr.next();
+            itr.remove();
+        }
+    }
+
+    private void movePlayer() {
         if (p1.getYOrd() > GAME_HEIGHT - 50) {
             p1.setYord(GAME_HEIGHT - 50);
             p1.setVelY(0);
@@ -169,9 +237,18 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.setColor(Color.BLACK);
-        g.fillRect(150, p1.getYOrd(), 50, 50);
-        g.fillRect(200, p1.getYOrd(), 50, 300);
+        g.fillRect(p1.getXOrd(), p1.getYOrd(), 50, 50);
         drawHeader(g);
+        drawObstacles(g);
+    }
+
+    private void drawObstacles(Graphics g) {
+        for (Obstacle o : obstacles) {
+            g.setColor(DARK_GRAY);
+            g.fillRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
+            g.setColor(AQUA);
+            g.drawRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
+        }
     }
 
     @Override
@@ -207,13 +284,9 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
         double delta = 0;
         // game loop
         while (running) {
+            if (exited) break;
             long now = System.nanoTime();
-            /*if (now - lastTime > 1000000000) lastTime = now;
-            double updates = (now - lastTime) / updateInterval;
-            for (int i = 0; i < updates; i++) {
-                actionPerformed();
-                lastTime += updateInterval;
-            }*/
+
             delta += (now - lastTime)/updateInterval;
             lastTime = now;
 
@@ -242,6 +315,89 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
         //this.delayMin = delayMin;
         //this.delayMax = delayMax;
         this.obstacleVel = obstacleVel;
+    }
+
+    private void startTimers() {
+        gameTimer.start();
+        obstacleDelayer.start();
+    }
+
+    private void stopTimers() {
+        gameTimer.stop();
+        obstacleDelayer.stop();
+    }
+
+    private void endGame() {
+        System.out.println("Game Over");
+        //u.setHighScore(counter);
+        stopTimers();
+        UIManager.put("Panel.background", LIGHT_GRAY);
+        UIManager.put("OptionPane.background", LIGHT_GRAY);
+
+        JOptionPane pane = new JOptionPane();
+        JDialog dialog = pane.createDialog("Game Over!");
+        dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+
+        String s = "You lasted " + counter + " seconds!";
+
+        JLabel message = new JLabel(s, SwingConstants.CENTER);
+        counter = 0;
+        message.setForeground(Color.WHITE);
+        message.setFont(new Font(null, Font.BOLD, 20));
+
+        JButton retry = createButton("Retry", dialog);
+        JButton home = createButton("Home", dialog);
+        JButton exit = createButton("Exit", dialog);
+        Object option[] = {retry, home, exit};
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(message, BorderLayout.CENTER);
+        pane.setMessage(panel);
+        pane.setOptions(option);
+
+        dialog.setSize(new Dimension(350, 170));
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+    }
+
+    private JButton createButton(String option, JDialog dialog) {
+        JButton b = new JButton(option);
+        b.setFocusable(false);
+        b.setBackground(DARK_GRAY);
+        b.setForeground(Color.WHITE);
+        b.setContentAreaFilled(false);
+        b.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JOptionPane.getRootFrame().dispose();
+                dialog.dispose();
+                switch (option) {
+                    case "Exit":
+                        running = false;
+                        game.dispose();
+                        stop();
+                        System.exit(0);
+                        break;
+                    case "Home":
+                        running = false;
+                        exited = true;
+                        stop();
+                        game.setHome();
+                    case "Retry":
+                        running = true;
+                        removeObstacles();
+                        obstacleDelayer.setInitialDelay(2000);
+                        initObstacles();
+                        startTimers();
+                        break;
+                }
+            }
+        });
+        String image = option + ".png";
+        Image icon = new ImageIcon(image).getImage();
+        icon = icon.getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+        b.setIcon(new ImageIcon(icon));
+        return b;
     }
 
     @Override

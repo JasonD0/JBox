@@ -29,7 +29,7 @@ public class FlappyLayout extends JPanel implements KeyListener, Runnable {
 
     public FlappyLayout(GameCenter g) {
         this.game = g;
-        p1 = new Player(250);
+        p1 = new Player(250, 50);
         //u = new User();
         init();
     }

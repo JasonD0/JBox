@@ -65,8 +65,8 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
         game = g;
         multiplayer = mp;
         rand = new Random();
-        p1 = new Player(500);
-        p2 = (!mp) ? null : new Player(500 + OFFSET);
+        p1 = new Player(500, 50);
+        p2 = (!mp) ? null : new Player(500 + OFFSET, 50);
         u = new User();
         init();
     }

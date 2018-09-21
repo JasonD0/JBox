@@ -9,10 +9,11 @@ public class Player extends JLabel{
 
     private int playerLength = 50;
     private int playerHeight = 50;
-    private int x = 50, y = 500, velY = 0;
+    private int x = 0, y = 0, velY = 0;
 
-    public Player(int y) {
+    public Player(int y, int x) {
         this.y = y;
+        this.x = x;
         initPlayer();
     }
 
