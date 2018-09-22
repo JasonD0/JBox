@@ -13,8 +13,10 @@ public class GameCenter extends JFrame {
     private static int HEIGHT = 535;
     private static final String TITLE = "JumpOver";
     private static Box boxLayout;
+    private User u;
 
     public GameCenter() {
+        u = new User();
         init();
     }
 
@@ -53,7 +55,7 @@ public class GameCenter extends JFrame {
         setPreferredSize(new Dimension(LENGTH, height));
         setMaximumSize(new Dimension(LENGTH, height));
         setMinimumSize(new Dimension(LENGTH, height));
-        JumpOverLayout jpl = new JumpOverLayout(this, mp);
+        JumpOverLayout jpl = new JumpOverLayout(this, mp, u);
         boxLayout.add(jpl);
         setLocationRelativeTo(null);
         setContentPane(boxLayout);
@@ -77,7 +79,7 @@ public class GameCenter extends JFrame {
         setPreferredSize(new Dimension(LENGTH, height));
         setMaximumSize(new Dimension(LENGTH, height));
         setMinimumSize(new Dimension(LENGTH, height));
-        GravityShiftLayout gs = new GravityShiftLayout(this);
+        GravityShiftLayout gs = new GravityShiftLayout(this,  u);
         boxLayout.add(gs);
         setLocationRelativeTo(null);
         setContentPane(boxLayout);

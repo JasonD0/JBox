@@ -61,13 +61,13 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
     private boolean multiplayer;
     private int p1_dead = -1, p2_dead = -1;
 
-    public JumpOverLayout(GameCenter g, boolean mp) {
+    public JumpOverLayout(GameCenter g, boolean mp, User u) {
         game = g;
         multiplayer = mp;
         rand = new Random();
         p1 = new Player(500, 50);
         p2 = (!mp) ? null : new Player(500 + OFFSET, 50);
-        u = new User();
+        this.u = u;
         init();
     }
 
@@ -216,12 +216,12 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
         int time = counter;
         if (multiplayer) {
             time = (p2_dead > 0) ? p2_dead : counter;
-            g2d.drawString(u.getHighScore() + "", 175, 513);
+            g2d.drawString(u.getHighScore("JumpOver") + "", 175, 513);
             g2d.drawString(time + "", 775, 513);
             time = (p1_dead > 0) ? p1_dead : counter;
         }
 
-        g2d.drawString(u.getHighScore() + "", 175, 55);
+        g2d.drawString(u.getHighScore("JumpOver") + "", 175, 55);
         g2d.drawString(time + "", 775, 55);
     }
 
@@ -459,7 +459,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
      */
     private void endGame() {
         System.out.println("Game Over");
-        u.setHighScore(counter);
+        u.setHighScore(counter, "JumpOver");
         stopTimers();
         UIManager.put("Panel.background", LIGHT_GRAY);
         UIManager.put("OptionPane.background", LIGHT_GRAY);
@@ -514,7 +514,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
                         stop();
                         game.setHome();
                     case "Retry":
-                        u.getHighScore();
+                        u.getHighScore("JumpOver");
                         instructions = true;
                         p1_dead = -1;
                         p2_dead = -1;

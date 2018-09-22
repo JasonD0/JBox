@@ -58,11 +58,11 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
     private boolean paused = false;
     private int delayMin, delayMax;
 
-    public GravityShiftLayout(GameCenter g) {
+    public GravityShiftLayout(GameCenter g, User u) {
         this.game = g;
         p1 = new Player(250, 150);
         rand = new Random();
-        //u = new User();
+        this.u = u;
         init();
     }
 
@@ -189,7 +189,7 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
         g2d.setFont(new Font(null, Font.BOLD, 20));
         g2d.setColor(Color.WHITE);
         int time = counter;
-        g2d.drawString(166 + "", 175, 55);
+        g2d.drawString(u.getHighScore("GravityShift") + "", 175, 55);
         g2d.drawString(time + "", 775, 55);
     }
 
@@ -201,36 +201,22 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
     }
 
     private void moveObject() {
-
-        Iterator<Obstacle> itr = obstacles.iterator();
-        ArrayList<Obstacle> toRemove = new ArrayList<>();
-        while (itr.hasNext() && endGame) {
-            Obstacle o = (endGame) ? itr.next() : null;
-            if (o == null) continue;
-            if (!o.inFrame() && endGame) {
-                int x = rows.getOrDefault(o.getY()/100, 0);
-                if (x > 0) rows.put(o.getY()/100, x-1);
-                //itr.remove();
-                toRemove.add(o);
+        for (int i = obstacles.size() - 1; i >= 0; i--) {
+            if (!obstacles.get(i).inFrame() && endGame) {
+                obstacles.remove(i);
             } else {
-                if (checkCollision(o, p1)) {
-                    o.move();
+                if (checkCollision(obstacles.get(i), p1)) {
+                    obstacles.get(i).move();
                 } else {
                     endGame();
                 }
             }
         }
-        obstacles.removeAll(toRemove);
         endGame = true;
     }
 
     private void removeObstacles() {
         endGame = false;
-        /*Iterator<Obstacle> itr = obstacles.iterator();
-        while (itr.hasNext()) {
-            itr.next();
-            itr.remove();
-        }*/
         obstacles.removeAll(obstacles);
     }
 
@@ -256,7 +242,8 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
     }
 
     private void drawObstacles(Graphics g) {
-        for (Obstacle o : obstacles) {
+        for (int i = obstacles.size() - 1; i >= 0; i--) {
+            Obstacle o = obstacles.get(i);
             g.setColor(DARK_GRAY);
             g.fillRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
             g.setColor(AQUA);
@@ -295,8 +282,6 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
             }
         }
         if (paused) return;
-        //p1.setVelY(5);
-        //p1.setYord(p1.getYOrd() + p1.getVelY());
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
             p1.setVelY(PLAYER_VEL*orientation);
         }
@@ -341,7 +326,7 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
                 defineObstacle(350, 700, 12);
                 break;
             case 85:
-                defineObstacle(300, 600, 12);
+                defineObstacle(300, 550, 13);
                 break;
             case 155:
                 defineObstacle(250, 500, 15);
@@ -352,7 +337,6 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
                 PLAYER_VEL = 12;
                 break;
         }
-        //obstacleDelayer.stop();
     }
 
     private int roundNearest50(int num) {
@@ -386,7 +370,7 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
 
     private void endGame() {
         System.out.println("Game Over");
-        //u.setHighScore(counter);
+        u.setHighScore(counter, "GravityShift");
         stopTimers();
         UIManager.put("Panel.background", LIGHT_GRAY);
         UIManager.put("OptionPane.background", LIGHT_GRAY);
@@ -450,6 +434,7 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
                         break;
                 }
                 paused = false;
+                orientation = 0;
                 obstacleDelayer.setInitialDelay(2000);
             }
         });
