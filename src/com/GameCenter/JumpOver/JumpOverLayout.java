@@ -176,7 +176,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
             public void actionPerformed(ActionEvent e) {
                 counter++;
                 timer.setText("Time    " + counter);
-                if (counter == 15 || counter == 35 || counter == 85 || counter == 155 || counter == 300) changeObstacleDelay();
+                if (counter == 15 || counter == 35 || counter == 85 || counter == 155 || counter == 300) changeDifficulty();
                 if (counter == 0 || counter == 15 || counter == 35 || counter == 85) instructions = true;
             }
         });
@@ -353,7 +353,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
     /**
      * Change rate of obstacle creation at arbitrary times
      */
-    private void changeObstacleDelay() {
+    private void changeDifficulty() {
         switch (counter) {
             case 15:
                 defineObstacle(850, 1550, 12 - VEL_ADJUSTMENT);
