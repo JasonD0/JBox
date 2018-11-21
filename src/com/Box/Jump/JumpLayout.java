@@ -1,10 +1,10 @@
-package com.GameCenter.JumpOver;
+package com.Box.Jump;
 
-import com.GameCenter.GameCenter;
+import com.Box.JBox;
 
-import com.GameCenter.Obstacle;
-import com.GameCenter.Player;
-import com.GameCenter.User;
+import com.Box.Obstacle;
+import com.Box.Player;
+import com.Box.User;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import javax.swing.JButton;
@@ -30,11 +30,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
 
-public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
+public class JumpLayout extends JPanel implements KeyListener, Runnable {
     private Timer obstacleDelayer; // delays new obstacles
     private Timer gameTimer;        // survival time
     private Timer delay;           // delay before speed increase
-    private GameCenter game;
+    private JBox game;
     private Random rand;
     private Player p1, p2;
     private User u;
@@ -61,7 +61,7 @@ public class JumpOverLayout extends JPanel implements KeyListener, Runnable {
     private boolean multiplayer;
     private int p1_dead = -1, p2_dead = -1;
 
-    public JumpOverLayout(GameCenter g, boolean mp, User u) {
+    public JumpLayout (JBox g, boolean mp, User u) {
         game = g;
         multiplayer = mp;
         rand = new Random();

@@ -1,9 +1,9 @@
-package com.GameCenter.GraviyShift;
+package com.Box.Float;
 
-import com.GameCenter.GameCenter;
-import com.GameCenter.Obstacle;
-import com.GameCenter.Player;
-import com.GameCenter.User;
+import com.Box.JBox;
+import com.Box.Obstacle;
+import com.Box.Player;
+import com.Box.User;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -33,7 +33,7 @@ import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 
-public class GravityShiftLayout extends JPanel implements KeyListener, Runnable {
+public class FloatLayout extends JPanel implements KeyListener, Runnable {
     private final static Color AQUA = new Color(127, 255, 212);
     private final static Color LIGHT_GRAY = new Color(51, 51, 51);
     private final static Color DARK_GRAY = new Color(45, 45, 45);
@@ -43,7 +43,7 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
     private ArrayList<Obstacle> obstacles;
     private Map<Integer, Integer> rows;
     private Timer obstacleDelayer; // delays new obstacles
-    private GameCenter game;
+    private JBox game;
     private Player p1;
     private User u;
     private boolean running = false;
@@ -58,7 +58,7 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
     private boolean paused = false;
     private int delayMin, delayMax;
 
-    public GravityShiftLayout(GameCenter g, User u) {
+    public FloatLayout(JBox g, User u) {
         this.game = g;
         p1 = new Player(250, 150);
         rand = new Random();
@@ -201,11 +201,11 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
     }
 
     private void moveObject() {
-        for (int i = obstacles.size() - 1; i >= 0; i--) {
-            if (!obstacles.get(i).inFrame() && endGame) {
+        for (int i = obstacles.size() - 1; i >= 0 && endGame; i--) {
+            if (endGame && !obstacles.get(i).inFrame()) {
                 obstacles.remove(i);
             } else {
-                if (checkCollision(obstacles.get(i), p1)) {
+                if (endGame && checkCollision(obstacles.get(i), p1)) {
                     obstacles.get(i).move();
                 } else {
                     endGame();
@@ -242,8 +242,10 @@ public class GravityShiftLayout extends JPanel implements KeyListener, Runnable 
     }
 
     private void drawObstacles(Graphics g) {
-        for (int i = obstacles.size() - 1; i >= 0; i--) {
-            Obstacle o = obstacles.get(i);
+        for (int i = obstacles.size() - 1; i >=0 && endGame; i--) {
+            Obstacle o = null;
+            if (obstacles.size() > 0) o = obstacles.get(i);
+            if (o == null) break;
             g.setColor(DARK_GRAY);
             g.fillRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
             g.setColor(AQUA);

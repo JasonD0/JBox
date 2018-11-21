@@ -1,21 +1,21 @@
-package com.GameCenter;
+package com.Box;
 
-import com.GameCenter.Flappy.FlappyLayout;
-import com.GameCenter.GraviyShift.GravityShiftLayout;
+import com.Box.Fly.FlyLayout;
+import com.Box.Float.FloatLayout;
+import com.Box.Jump.JumpLayout;
 import javax.swing.JFrame;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import java.awt.Dimension;
-import com.GameCenter.JumpOver.*;
 
-public class GameCenter extends JFrame {
+public class JBox extends JFrame {
     private static final int LENGTH = 1000;
     private static int HEIGHT = 535;
-    private static final String TITLE = "JumpOver";
+    private static final String TITLE = "Box";
     private static Box boxLayout;
     private User u;
 
-    public GameCenter() {
+    public JBox() {
         u = new User();
         init();
     }
@@ -55,7 +55,7 @@ public class GameCenter extends JFrame {
         setPreferredSize(new Dimension(LENGTH, height));
         setMaximumSize(new Dimension(LENGTH, height));
         setMinimumSize(new Dimension(LENGTH, height));
-        JumpOverLayout jpl = new JumpOverLayout(this, mp, u);
+        JumpLayout jpl = new JumpLayout(this, mp, u);
         boxLayout.add(jpl);
         setLocationRelativeTo(null);
         setContentPane(boxLayout);
@@ -67,7 +67,7 @@ public class GameCenter extends JFrame {
         setPreferredSize(new Dimension(LENGTH, height));
         setMaximumSize(new Dimension(LENGTH, height));
         setMinimumSize(new Dimension(LENGTH, height));
-        FlappyLayout fp = new FlappyLayout(this);
+        FlyLayout fp = new FlyLayout(this);
         boxLayout.add(fp);
         setLocationRelativeTo(null);
         setContentPane(boxLayout);
@@ -79,7 +79,7 @@ public class GameCenter extends JFrame {
         setPreferredSize(new Dimension(LENGTH, height));
         setMaximumSize(new Dimension(LENGTH, height));
         setMinimumSize(new Dimension(LENGTH, height));
-        GravityShiftLayout gs = new GravityShiftLayout(this,  u);
+        FloatLayout gs = new FloatLayout(this,  u);
         boxLayout.add(gs);
         setLocationRelativeTo(null);
         setContentPane(boxLayout);
@@ -97,7 +97,7 @@ public class GameCenter extends JFrame {
 
     public static void main(String[] arg) {
       //  EventQueue.invokeLater(() -> {
-            GameCenter game = new GameCenter();
+            JBox game = new JBox();
           //  game.setVisible(true);
         //});
     }

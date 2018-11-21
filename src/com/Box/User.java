@@ -1,4 +1,4 @@
-package com.GameCenter;
+package com.Box;
 
 import java.io.File;
 import java.io.FileNotFoundException;

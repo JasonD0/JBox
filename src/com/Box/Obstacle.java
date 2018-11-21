@@ -1,10 +1,10 @@
-package com.GameCenter;
+package com.Box;
 
 import java.awt.Rectangle;
 
 public class Obstacle {
 
-    private int length, height, x, y;
+    private int length, height, x, y, y2, topHeight, botHeight;
     private boolean inFrame;
     private int obstacleVel;
 
@@ -14,6 +14,17 @@ public class Obstacle {
         this.obstacleVel = obstacleVel;
         this.length = length;
         this.height = height;
+        inFrame = true;
+    }
+
+    public Obstacle(int x, int y1, int y2, int obstacleVel, int length, int topHeight, int botHeight) {
+        this.x = x;
+        this.y = y1;
+        this.y2 = y2;
+        this.obstacleVel = obstacleVel;
+        this.length = length;
+        this.topHeight = topHeight;
+        this.botHeight = botHeight;
         inFrame = true;
     }
 
@@ -32,6 +43,8 @@ public class Obstacle {
         return this.y;
     }
 
+    public int getY2() { return this.y2; }
+
     public int getLength() {
         return this.length;
     }
@@ -47,6 +60,10 @@ public class Obstacle {
     public void setVel(int speed) {
         obstacleVel = speed;
     }
+
+    public int getTopH() { return this.topHeight; }
+
+    public int getBotH() { return this.botHeight; }
 
     public Rectangle getBoundary() {
         return new Rectangle(x, y, length, height);

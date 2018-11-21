@@ -1,4 +1,4 @@
-package com.GameCenter;
+package com.Box;
 
 import javax.swing.JLabel;
 import java.awt.Rectangle;
