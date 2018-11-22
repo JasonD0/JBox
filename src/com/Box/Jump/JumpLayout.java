@@ -42,6 +42,7 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
     private int obstacleLength, obstacleHeight, obstacleVel;
     private int delayMin, delayMax;
     private int counter;
+    private double delta;
     private boolean instructions = true;
     private boolean endGame = false;    // quick way to prevent concurrency (clearing list when list currently being modified)
     private boolean paused = false;
@@ -505,16 +506,16 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
                     case "Exit":
                         running = false;
                         game.dispose();
-                        stop();
                         System.exit(0);
                         break;
                     case "Home":
                         running = false;
                         exited = true;
-                        stop();
                         game.setHome();
+                        break;
                     case "Retry":
                         u.getHighScore("JumpOver");
+                        delta = 0;
                         instructions = true;
                         p1_dead = -1;
                         p2_dead = -1;
@@ -565,7 +566,7 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         long lastTime = System.nanoTime();
         final double fps = 60.0;
         final double updateInterval = 1000000000 / fps;
-        double delta = 0;
+        delta = 0;
         // game loop
         while (running) {
             if (exited) break;

@@ -49,6 +49,7 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
     private boolean running = false;
     private boolean exited = false;
     private boolean endGame = false;
+    private double delta;
     private Thread t;
     private Timer gameTimer;        // survival time
     private int counter;
@@ -294,7 +295,7 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         long lastTime = System.nanoTime();
         final double fps = 60.0;
         final double updateInterval = 1000000000 / fps;
-        double delta = 0;
+        delta = 0;
         // game loop
         while (running) {
             if (exited) break;
@@ -418,16 +419,16 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
                     case "Exit":
                         running = false;
                         game.dispose();
-                        stop();
                         System.exit(0);
                         break;
                     case "Home":
                         running = false;
                         exited = true;
-                        stop();
                         game.setHome();
+                        break;
                     case "Retry":
                         defineObstacle(400, 900, 10);
+                        delta = 0;
                         running = true;
                         removeObstacles();
                         obstacleDelayer.setInitialDelay(2000);
