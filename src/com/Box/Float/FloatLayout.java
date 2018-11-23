@@ -59,6 +59,11 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
     private boolean paused = false;
     private int delayMin, delayMax;
 
+    /**
+     * Constructor
+     * @param g    game frame
+     * @param u    user
+     */
     public FloatLayout(JBox g, User u) {
         this.game = g;
         p1 = new Player(250, 150);
@@ -84,6 +89,9 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         }
     }
 
+    /**
+     * Sets up the game
+     */
     private void init() {
         setBackground(LIGHT_GRAY);
         setFocusTraversalKeysEnabled(false);
@@ -105,6 +113,10 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         start();
     }
 
+    /**
+     * Creates label containing instructions
+     * @return    label
+     */
     private JLabel initInstructions() {
         JLabel instructions = new JLabel("", SwingConstants.CENTER);
         String s = "<html><font color='rgb(127, 255, 212)'>UP/DOWN:</font> MOVE #SPACE# <font color='rgb(127, 255, 212)'>SPACE:</font> STOP #SPACE# <font color='rgb(127, 255, 212)'>P:</font> PAUSE</html>";
@@ -116,6 +128,9 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         return instructions;
     }
 
+    /**
+     * Creates timer to create obstacles at randomised intervals
+     */
     private void initObstacles() {
         defineObstacle(400, 900, 10);
         obstacles = new ArrayList<>();
@@ -130,6 +145,9 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         });
     }
 
+    /**
+     * Adds obstacles to game
+     */
     private void addObstacles() {
         int numObstacles = (counter >= 35) ? (counter >= 250) ? my_rand(3, 1) : my_rand(2, 1) : 1;
         for (; numObstacles > 0; numObstacles--) {
@@ -139,6 +157,12 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         }
     }
 
+    /**
+     * Checks collision between obstacle and player
+     * @param o    obstacles
+     * @param p    player
+     * @return     true if obstacle not collided with player
+     */
     private boolean checkCollision(Obstacle o, Player p) {
         return (p.getXOrd() + p.getPlayerLength() <= o.getX() ||
                 p.getXOrd() >= o.getX() + o.getLength() ||
@@ -146,6 +170,11 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
                 p.getYOrd() >= o.getY() + o.getHeight());
     }
 
+    /**
+     * Creates component showing high score and time
+     * @param c    colour
+     * @return     JLabel
+     */
     private JLabel initHeader(Color c) {
         String head = "\tHigh Score \t\t\t\t\t\t\t\t\t\t Time ";
         head = head.replaceAll("\\t", "         ");
@@ -160,6 +189,10 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         return header;
     }
 
+    /**
+     * Creates bottom platform for the game
+     * @return    JLabel
+     */
     private JLabel initPlatform() {
         JLabel platform = new JLabel();
         platform.setBorder(BorderFactory.createMatteBorder(10, 0, 0, 0, AQUA));
@@ -171,6 +204,9 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         return platform;
     }
 
+    /**
+     * Creates game timer
+     */
     private void initGameTime() {
         counter = 0;
         JLabel timer = new JLabel("Time    " + counter);
@@ -185,15 +221,9 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         });
     }
 
-    private void drawHeader(Graphics g) {
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setFont(new Font(null, Font.BOLD, 20));
-        g2d.setColor(Color.WHITE);
-        int time = counter;
-        g2d.drawString(u.getHighScore("GravityShift") + "", 175, 55);
-        g2d.drawString(time + "", 775, 55);
-    }
-
+    /**
+     * Move objects in the game
+     */
     private void actionPerformed() {
         requestFocusInWindow();
         if (paused) return;
@@ -201,31 +231,42 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         movePlayer();
     }
 
+    /**
+     * Moves all objects incrementally across the screen
+     */
     private void moveObject() {
         for (int i = obstacles.size() - 1; i >= 0 && endGame; i--) {
+            // remove non-viewable obstacles
             if (endGame && !obstacles.get(i).inFrame()) {
                 obstacles.remove(i);
+
+            // check collisions
             } else {
-                if (endGame && checkCollision(obstacles.get(i), p1)) {
-                    obstacles.get(i).move();
-                } else {
-                    endGame();
-                }
+                if (endGame && checkCollision(obstacles.get(i), p1)) obstacles.get(i).move();
+                else endGame();
             }
         }
         endGame = true;
     }
 
+    /**
+     * Remove all obstacles from the game
+     */
     private void removeObstacles() {
         endGame = false;
         obstacles.removeAll(obstacles);
     }
 
+    /**
+     * Move players
+     */
     private void movePlayer() {
+        // prevent players from moving below the bottom platform
         if (p1.getYOrd() > GAME_HEIGHT - 50) {
             p1.setYord(GAME_HEIGHT - 50);
             p1.setVelY(0);
         }
+        // prevent players from above the top platform
         if (p1.getYOrd() < 105) {
             p1.setYord(105);
             p1.setVelY(0);
@@ -233,6 +274,10 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         p1.setYord(p1.getYOrd() + p1.getVelY());
     }
 
+    /**
+     * Draws all components of the game
+     * @param g
+     */
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -242,6 +287,23 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         drawObstacles(g);
     }
 
+    /**
+     * Updates time
+     * @param g
+     */
+    private void drawHeader(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setFont(new Font(null, Font.BOLD, 20));
+        g2d.setColor(Color.WHITE);
+        int time = counter;
+        g2d.drawString(u.getHighScore("GravityShift") + "", 175, 55);
+        g2d.drawString(time + "", 775, 55);
+    }
+
+    /**
+     * Draws all of the obstacles
+     * @param g
+     */
     private void drawObstacles(Graphics g) {
         for (int i = obstacles.size() - 1; i >=0 && endGame; i--) {
             Obstacle o = null;
@@ -254,17 +316,24 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         }
     }
 
+    /**
+     * Updates player velocity and direction
+     * @param e
+     */
     @Override
     public void keyPressed(KeyEvent e) {
         if (paused) return;
+        // change player direction to up
         if (e.getKeyCode() == KeyEvent.VK_UP) {
             p1.setVelY(-PLAYER_VEL);
             orientation = -1;
         }
+        // stop player movement
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
             p1.setYord(roundNearest50(p1.getYOrd()) + 5);
             p1.setVelY(0);
         }
+        // change player direction to down
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
             p1.setVelY(PLAYER_VEL);
             orientation = 1;
@@ -272,35 +341,44 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         p1.setYord(p1.getYOrd() + p1.getVelY());
     }
 
+    /**
+     * Pause/Unpause game or unfreeze the player
+     * @param e
+     */
     @Override
     public void keyReleased(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_P) {
+            // unpause game
             if (paused) {
                 paused = false;
                 obstacleDelayer.setInitialDelay(200);
                 startTimers();
+            // pause game
             } else {
                 paused = true;
                 stopTimers();
             }
         }
         if (paused) return;
+        // unfreeze player
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
             p1.setVelY(PLAYER_VEL*orientation);
         }
     }
 
+    /**
+     * Game loop
+     */
     @Override
     public void run() {
         long lastTime = System.nanoTime();
         final double fps = 60.0;
         final double updateInterval = 1000000000 / fps;
         delta = 0;
-        // game loop
+
         while (running) {
             if (exited) break;
             long now = System.nanoTime();
-
             delta += (now - lastTime)/updateInterval;
             lastTime = now;
 
@@ -308,8 +386,8 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
                 actionPerformed();
                 delta--;
             }
-
             repaint();
+
             try {
                 if ((lastTime - System.nanoTime() + updateInterval)/1000000 < 0) continue;
                 Thread.sleep(8 /*(long)(lastTime - System.nanoTime() + updateInterval)/1000000*/);
@@ -320,6 +398,9 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         stop();
     }
 
+    /**
+     * Change obstacle velocity and rate at which obstacles are created
+     */
     private void changeDifficulty() {
         switch (counter) {
             case 15:
@@ -342,35 +423,59 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         }
     }
 
+    /**
+     * Round number to nearest 50
+     * @param num    the number
+     * @return       the rounded number
+     */
     private int roundNearest50(int num) {
         int x = num/100;
         int y = num%100;
         int res = (y > 25) ? ((y < 75) ? x * 100 + 50 : x * 100 + 100) : x * 100;
-        // 623  ->  623/100 = 6   623%100 = 23    23 < 25  =>  6 * 100 = 600
-        // 868  ->  868/868 = 8   868%100 = 68    68 > 25  =>  68 < 75  =>  8*100 + 50 = 850
         return res;
     }
 
+    /**
+     * Get a random number between an interval
+     * @param upper    upper limit of the interval
+     * @param lower    lower limit of the interval
+     * @return         number
+     */
     private int my_rand(int upper, int lower) {
         return rand.nextInt(upper - lower + 1) + lower;
     }
 
+    /**
+     * Change obstacle's velocity and rate of creation
+     * @param delayMin       minimum time to create new obstacle
+     * @param delayMax       maximum time to create new obstacle
+     * @param obstacleVel    velocity of the obstacle
+     */
     private void defineObstacle(int delayMin, int delayMax, int obstacleVel) {
         this.delayMin = delayMin;
         this.delayMax = delayMax;
         this.obstacleVel = obstacleVel;
     }
 
+    /**
+     * Start all timers for the game
+     */
     private void startTimers() {
         gameTimer.start();
         obstacleDelayer.start();
     }
 
+    /**
+     * Stop all timers for the game
+     */
     private void stopTimers() {
         gameTimer.stop();
         obstacleDelayer.stop();
     }
 
+    /**
+     * Creates end game pop-up component
+     */
     private void endGame() {
         System.out.println("Game Over");
         u.setHighScore(counter, "GravityShift");
@@ -382,13 +487,14 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         JDialog dialog = pane.createDialog("Game Over!");
         dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
+        // create label to show time lasted
         String s = "You lasted " + counter + " seconds!";
-
         JLabel message = new JLabel(s, SwingConstants.CENTER);
         counter = 0;
         message.setForeground(Color.WHITE);
         message.setFont(new Font(null, Font.BOLD, 20));
 
+        // create buttons for the pop-up component
         JButton retry = createButton("Retry", dialog);
         JButton home = createButton("Home", dialog);
         JButton exit = createButton("Exit", dialog);
@@ -404,6 +510,12 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         dialog.setVisible(true);
     }
 
+    /**
+     * Creates button for the end game pop-up
+     * @param option    indicates the button functionality
+     * @param dialog    parent component of the button
+     * @return          button
+     */
     private JButton createButton(String option, JDialog dialog) {
         JButton b = new JButton(option);
         b.setFocusable(false);

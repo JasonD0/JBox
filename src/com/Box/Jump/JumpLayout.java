@@ -44,7 +44,7 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
     private int counter;
     private double delta;
     private boolean instructions = true;
-    private boolean endGame = false;    // quick way to prevent concurrency (clearing list when list currently being modified)
+    private boolean endGame = false;
     private boolean paused = false;
     private boolean exited = false;     // exited jumpover game
     private final static int GAME_LENGTH = 1000;
@@ -55,13 +55,19 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
     private final static Color LIGHT_GRAY = new Color(51, 51, 51);
     private final static Color DARK_GRAY = new Color(45, 45, 45);
     private int PLAYER_VEL = 10;
-    private final static int VEL_ADJUSTMENT = 0;    // temp solution to inconsistent frame rates
+    private final static int VEL_ADJUSTMENT = 0;
     private final static int OFFSET = 466;   // offset height for player2 and their obstacles
     private boolean running = false;
     private Thread t;
     private boolean multiplayer;
     private int p1_dead = -1, p2_dead = -1;
 
+    /**
+     * Constructor
+     * @param g     game frame
+     * @param mp    indicates if multiplayer
+     * @param u     user
+     */
     public JumpLayout (JBox g, boolean mp, User u) {
         game = g;
         multiplayer = mp;
@@ -72,6 +78,9 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         init();
     }
 
+    /**
+     * Sets up game
+     */
     private void init() {
         setBackground(LIGHT_GRAY);
         setFocusTraversalKeysEnabled(false);
@@ -79,18 +88,14 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         setFocusable(true);
         setVisible(true);
         addKeyListener(this);
-
         setLayout(new BorderLayout());
         add(initPlatform(), BorderLayout.SOUTH);
         if (multiplayer) add(initHeader(Color.CYAN), BorderLayout.CENTER);
         add(initHeader(AQUA), BorderLayout.NORTH);
-
         initGameTime();
         initObstacles();
         initSpeedIncreaseDelayer();
-
         startTimers();
-
         start();
     }
 
@@ -111,6 +116,11 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         }
     }
 
+    /**
+     * Create component showing high score and time
+     * @param c    color
+     * @return     JLabel
+     */
     private JLabel initHeader(Color c) {
         String head = "\tHigh Score \t\t\t\t\t\t\t\t\t\t Time ";
         head = head.replaceAll("\\t", "         ");
@@ -125,6 +135,10 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         return header;
     }
 
+    /**
+     * Create platform for the player and obstacles
+     * @return
+     */
     private JLabel initPlatform() {
         JLabel platform = new JLabel();
         Color c = (multiplayer) ? Color.CYAN : AQUA;
@@ -137,6 +151,9 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         return platform;
     }
 
+    /**
+     * Create timer for creating obstacles at randomised intervals
+     */
     private void initObstacles() {
         defineObstacle(975, 2000, 10 - VEL_ADJUSTMENT);
         obstacles = new ArrayList<>();
@@ -168,6 +185,9 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         });
     }
 
+    /**
+     * Creates game timer
+     */
     private void initGameTime() {
         counter = 0;
         JLabel timer = new JLabel("Time    " + counter);
@@ -183,6 +203,10 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         });
     }
 
+    /**
+     * Draws components of the game
+     * @param g
+     */
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -198,23 +222,37 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         if (multiplayer) drawPlatform(g);
     }
 
+    /**
+     * Draws game over screen when collision occurs for multiplayer
+     * @param g
+     * @param y    y ordinate to show the game over message
+     */
     private void drawGameOver(Graphics g, int y) {
         g.setColor(Color.WHITE);
         g.setFont(new Font(null, Font.BOLD, 100));
         g.drawString("Game Over", 220, y);
     }
 
+    /**
+     * Draws platform for the player and obstacles
+     * @param g
+     */
     private void drawPlatform(Graphics g) {
         g.setColor(AQUA);
         g.fillRect(0, 450, 1000, 10);
     }
 
+    /**
+     * Shows time and high score
+     * @param g
+     */
     private void drawHeader(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setFont(new Font(null, Font.BOLD, 20));
         g2d.setColor(Color.WHITE);
 
         int time = counter;
+        // extra header for second player
         if (multiplayer) {
             time = (p2_dead > 0) ? p2_dead : counter;
             g2d.drawString(u.getHighScore("JumpOver") + "", 175, 513);
@@ -226,6 +264,10 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         g2d.drawString(time + "", 775, 55);
     }
 
+    /**
+     * Draws all obstacles
+     * @param g
+     */
     private void drawObstacles(Graphics g) {
         for (Obstacle o : obstacles) {
             if (p1_dead == -1) {
@@ -234,6 +276,7 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
                 g.setColor(AQUA);
                 g.drawRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
             }
+            // draws obstacles for the second player
             if (multiplayer && p2_dead == -1) {
                 g.setColor(DARK_GRAY);
                 g.fillRect(o.getX(), o.getY() + OFFSET, o.getLength(), o.getHeight());
@@ -243,16 +286,25 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         }
     }
 
+    /**
+     * Draws player(s)
+     * @param g
+     */
     private void drawPlayer(Graphics g) {
         g.setColor(Color.BLACK);
         g.fillRect(p1.getXOrd(), p1.getYOrd(), p1.getPlayerLength(), p1.getPlayerHeight());
 
+        // draws second player
         if (multiplayer) {
             g.setColor(Color.WHITE);
             g.fillRect(p2.getXOrd(), p2.getYOrd(), p2.getPlayerLength(), p2.getPlayerHeight());
         }
     }
 
+    /**
+     * Shows instructions
+     * @param g
+     */
     private void drawInstructions(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setFont(new Font(null, Font.BOLD, 25));
@@ -264,6 +316,7 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
             else if (counter >= 35 && counter < 40) g2d.drawString("PRESS DOWN TO DUCK", 333, 225);
             else instructions = false;
         }
+        // shows instructions for the second player
         if (multiplayer) {
             if (p2_dead > 0) return;
             if (counter < 5) g2d.drawString("PRESS W TO JUMP", 360, 675);
@@ -272,6 +325,9 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         }
     }
 
+    /**
+     * Moves obstacles incrementally across the screen
+     */
     //@Override
     public void actionPerformed(/*ActionEvent e*/) {
         if (paused) return;
@@ -305,6 +361,9 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         endGame = true;
     }
 
+    /**
+     * Moves player(s) up or down
+     */
     private void movePlayer() {
         int y1 = p1.getYOrd();
         // player's maximum jump height
@@ -319,6 +378,7 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         }
         p1.setYord(p1.getYOrd() + p1.getVelY());
 
+        // moving second player
         if (multiplayer) {
             int y2 = p2.getYOrd();
             // player's maximum jump height
@@ -335,6 +395,13 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         }
     }
 
+    /**
+     * Checks collision between obstacle and player
+     * @param o
+     * @param p
+     * @param offset
+     * @return
+     */
     private boolean checkCollision(Obstacle o, Player p, int offset) {
         return (p.getXOrd() + p.getPlayerLength() < o.getX() ||
                 p.getXOrd() > o.getX() + o.getLength() ||
@@ -342,6 +409,9 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
                 p.getYOrd() > o.getY() + offset + o.getHeight());
     }
 
+    /**
+     * Removes all obstacles
+     */
     private void removeObstacles() {
         endGame = false;
         Iterator<Obstacle> itr = obstacles.iterator();
@@ -378,6 +448,10 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         delay.start();
     }
 
+    /**
+     * let player(s) jump/crouch
+     * @param e
+     */
     @Override
     public void keyPressed(KeyEvent e) {
         if (paused) return;
@@ -398,12 +472,12 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         }
 
         if (multiplayer && p2.getYOrd() == GAME_HEIGHT2 - p2.getPlayerHeight()) {
-            // player jumped
+            // player2 jumped
             if (e.getKeyCode() == KeyEvent.VK_W) {
                 setOriginalHeight(p2);
                 p2.setVelY(-PLAYER_VEL);
             }
-            // player crouched
+            // player2 crouched
             else if (e.getKeyCode() == KeyEvent.VK_S) {
                 if (p2.getPlayerHeight() == PLAYER_HEIGHT) {
                     p2.setPlayerHeight(p2.getPlayerHeight() / 2);
@@ -448,6 +522,10 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         }
     }
 
+    /**
+     * Uncrouch player
+     * @param p
+     */
     private void setOriginalHeight(Player p) {
         if (p.getPlayerHeight() < PLAYER_HEIGHT) {
             p.setPlayerHeight(PLAYER_HEIGHT);
@@ -469,13 +547,14 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         JDialog dialog = pane.createDialog("Game Over!");
         dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
+        // create message showing winner if multiplayer or time lasted
         String s = (multiplayer) ? (p1_dead == p2_dead) ? "Tied!" : (p1_dead > p2_dead) ? "Player 1 Wins!" : "Player 2 Wins!" : "You lasted " + counter + " seconds!";
-
         JLabel message = new JLabel(s, SwingConstants.CENTER);
         counter = 0;
         message.setForeground(Color.WHITE);
         message.setFont(new Font(null, Font.BOLD, 20));
 
+        // create buttons for the pop-up component
         JButton retry = createButton("Retry", dialog);
         JButton home = createButton("Home", dialog);
         JButton exit = createButton("Exit", dialog);
@@ -491,6 +570,12 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         dialog.setVisible(true);
     }
 
+    /**
+     * Create button for end game pop-up component
+     * @param option     indicates functionality of button
+     * @param dialog     parent component for the button
+     * @return           JButton
+     */
     private JButton createButton(String option, JDialog dialog) {
         JButton b = new JButton(option);
         b.setFocusable(false);
@@ -538,28 +623,49 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         return b;
     }
 
+    /**
+     * Get random number between an interval
+     * @param upper     upper limit of the interval
+     * @param lower     lower limit of the interval
+     * @return          number
+     */
     private int my_rand(int upper, int lower) {
         return rand.nextInt(upper - lower + 1) + lower;
     }
 
+    /**
+     * Change obstacle velocity and obstacle creation delay
+     * @param delayMin       minimum delay time for obstacle creation
+     * @param delayMax       maximum delay time for obstacle creation
+     * @param obstacleVel    new velocity
+     */
     private void defineObstacle(int delayMin, int delayMax, int obstacleVel) {
         this.delayMin = delayMin;
         this.delayMax = delayMax;
         this.obstacleVel = obstacleVel;
     }
 
+    /**
+     * Stop all timers
+     */
     private void stopTimers() {
         //t.stop();
         obstacleDelayer.stop();
         gameTimer.stop();
     }
 
+    /**
+     * Start all timers
+     */
     private void startTimers() {
       //  t.start();
         obstacleDelayer.start();
         gameTimer.start();
     }
 
+    /**
+     * Game loop
+     */
     @Override
     public void run() {
         // game loop
@@ -567,7 +673,7 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         final double fps = 60.0;
         final double updateInterval = 1000000000 / fps;
         delta = 0;
-        // game loop
+
         while (running) {
             if (exited) break;
             long now = System.nanoTime();

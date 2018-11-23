@@ -50,6 +50,10 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
     private Thread t;
     private boolean start;
 
+    /**
+     * Constructor
+     * @param g    game frame
+     */
     public FlyLayout(JBox g) {
         this.game = g;
         this.rand = new Random();
@@ -75,6 +79,9 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         }
     }
 
+    /**
+     * Set up the game
+     */
     private void init() {
         setBackground(LIGHT_GRAY);
         setFocusTraversalKeysEnabled(false);
@@ -88,10 +95,13 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         start();
     }
 
+    /**
+     * Create game timer
+     */
     private void initGameTime() {
         counter = 0;
         //int[] intervals = new int[] {0, 10, 50, 100, 200};
-        List<Integer> intervals = Arrays.asList(0, 10, 50);
+        List<Integer> intervals = Arrays.asList(0, 10, 50, 100);
         gameTimer = new Timer(1000, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -102,24 +112,9 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         });
     }
 
-    private void changeDifficulty() {
-        //500 - minObstacleHeight*2 - gap(<250 > 200);
-        minObstacleHeight = 75;
-        switch (counter) {
-            case 0:
-                maxGap = 230;
-                minGap = 180;
-                break;
-            case 10:
-                maxGap = 200;
-                minGap = 150;
-                break;
-            case 50:
-                minGap = 120;
-                break;
-        }
-    }
-
+    /**
+     * Creates timer to create obstacles at regular intervals
+     */
     private void initObstacles() {
         obstacles = new ArrayList<>();
         obstacleVel = 10;
@@ -137,10 +132,16 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         });
     }
 
+    /**
+     * Remove all obstacles from the game
+     */
     private void removeObstacles() {
         obstacles.removeAll(obstacles);
     }
 
+    /**
+     * Move objects in the game
+     */
     private void actionPerformed() {
         if (!running) return;
         requestFocusInWindow();
@@ -148,23 +149,29 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         movePlayer();
     }
 
+    /**
+     * Incrementally move all obstacles across the screen
+     */
     private void moveObstacles() {
         if (!running) return;
         for (int i = 0; i < obstacles.size(); i++) {
             Obstacle o = obstacles.get(i);
-            if (!o.inFrame()) obstacles.remove(i);
+            if (!o.inFrame()) obstacles.remove(i);  // remove non-viewable obstacles
             else {
+                // check collision with player
                 if (checkCollision(o)) o.move();
-                else {
-                    endGame();
-                }
+                else endGame();
             }
         }
     }
 
+    /**
+     * Move player
+     */
     private void movePlayer() {
         if (!running) return;
         int y = p1.getYOrd();
+        // prevent player from going below the screen
         if (y > GAME_HEIGHT - 50) {
             p1.setVelY(0);
             p1.setYord(GAME_HEIGHT - 50);
@@ -175,12 +182,21 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         p1.setYord(y + p1.getVelY());
     }
 
+    /**
+     * Check collision between the player and an obstacle
+     * @param o    obstacle
+     * @return     true if obstacle isn't colliding with the player
+     */
     private boolean checkCollision(Obstacle o) {
         return p1.getXOrd() + p1.getPlayerLength() < o.getX() ||
                 p1.getXOrd() > o.getX() + o.getLength() ||
                 (p1.getYOrd() + p1.getPlayerHeight() < o.getY2() && p1.getYOrd() > o.getY() + o.getTopH());
     }
 
+    /**
+     * Draws components on the screen
+     * @param g
+     */
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -189,6 +205,10 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         drawObstacles(g);
     }
 
+    /**
+     * Shows instructions on how to play the game
+     * @param g
+     */
     private void drawInstructions(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setFont(new Font(null, Font.BOLD, 25));
@@ -196,11 +216,19 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         g2d.drawString("Press any key to start. Press up to move.", 250, 100);
     }
 
+    /**
+     * Draws the player
+     * @param g
+     */
     private void drawPlayer(Graphics g) {
         g.setColor(Color.BLACK);
         g.fillRect(p1.getXOrd(), p1.getYOrd(), p1.getPlayerLength(), p1.getPlayerHeight());
     }
 
+    /**
+     * Draw all obstacles
+     * @param g
+     */
     private void drawObstacles(Graphics g) {
         for (Obstacle o : obstacles) {
             g.setColor(DARK_GRAY);
@@ -212,12 +240,20 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         }
     }
 
+    /**
+     * Moves player up when the up key is pressed
+     * @param e
+     */
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_UP) p1.setVelY(-5);
         p1.setYord(p1.getYOrd() + p1.getVelY());
     }
 
+    /**
+     * Start moving the player down when no keys pressed
+     * @param e
+     */
     @Override
     public void keyReleased(KeyEvent e) {
         if (!start) startTimers();
@@ -225,13 +261,15 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         p1.setYord(p1.getYOrd() + p1.getVelY());
     }
 
+    /**
+     * Game loop
+     */
     @Override
     public void run() {
         long lastTime = System.nanoTime();
         final double fps = 60.0;
         final double updateInterval = 1000000000 / fps;
         delta = 0;
-        // game loop
         while (running) {
             long now = System.nanoTime();
             delta += (now - lastTime)/updateInterval;
@@ -241,8 +279,8 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
                 actionPerformed();
                 delta--;
             }
-
             repaint();
+
             try {
                 if ((lastTime - System.nanoTime() + updateInterval)/1000000 < 0) continue;
                 Thread.sleep(8 /*(long)(lastTime - System.nanoTime() + updateInterval)/1000000*/);
@@ -253,18 +291,50 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         stop();
     }
 
+    /**
+     * Start all timers for the game
+     */
     private void startTimers() {
         start = true;
         gameTimer.start();
         obstacleDelayer.start();
     }
 
+    /**
+     * Stop all timers for the game
+     */
     private void stopTimers() {
         start = false;
         gameTimer.stop();
         obstacleDelayer.stop();
     }
 
+    /**
+     * Change minimum and maximum gap for the player to go through
+     */
+    private void changeDifficulty() {
+        minObstacleHeight = 75;
+        switch (counter) {
+            case 0:
+                maxGap = 230;
+                minGap = 180;
+                break;
+            case 10:
+                maxGap = 200;
+                minGap = 150;
+                break;
+            case 50:
+                minGap = 120;
+                break;
+            case 100:
+                maxGap = 120;
+                break;
+        }
+    }
+
+    /**
+     * Create the end game pop-up component
+     */
     private void endGame() {
         System.out.println("Game Over");
         stopTimers();
@@ -275,13 +345,14 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         JDialog dialog = pane.createDialog("Game Over!");
         dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
+        // create the message showing time lasted on the component
         String s = "You lasted " + counter + " seconds!";
-
         JLabel message = new JLabel(s, SwingConstants.CENTER);
         counter = 0;
         message.setForeground(Color.WHITE);
         message.setFont(new Font(null, Font.BOLD, 20));
 
+        // create all the buttons on the component
         JButton retry = createButton("Retry", dialog);
         JButton home = createButton("Home", dialog);
         JButton exit = createButton("Exit", dialog);
@@ -297,6 +368,12 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
         dialog.setVisible(true);
     }
 
+    /**
+     * Creates buttons for the end game pop-up component
+     * @param option    indicates the functionality of the button
+     * @param dialog    parent component of the button
+     * @return          button
+     */
     private JButton createButton(String option, JDialog dialog) {
         JButton b = new JButton(option);
         b.setFocusable(false);
