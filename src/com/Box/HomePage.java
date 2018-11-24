@@ -26,11 +26,18 @@ public class HomePage extends JPanel {
     private JButton jump, fly, Jfloat;
     private JButton exit;
 
+    /**
+     * Constructor
+     * @param g    game frame
+     */
     public HomePage(JBox g) {
         this.game = g;
         init();
     }
 
+    /**
+     * Sets up buttons to play each game
+     */
     private void init() {
         setBackground(LIGHT_GRAY);
         Box layout = new Box(BoxLayout.Y_AXIS);
@@ -50,6 +57,12 @@ public class HomePage extends JPanel {
         add(layout);
     }
 
+    /**
+     * Creates button to start a particular game/exit
+     * @param option    indicates the button functionality
+     * @param dialog    parent element of the button
+     * @return          JButton
+     */
     private JButton createButton(String option, JDialog dialog) {
         JButton b = new JButton();
         b.setFocusable(false);
@@ -97,6 +110,9 @@ public class HomePage extends JPanel {
         return b;
     }
 
+    /**
+     * Creates comoponent to allow user to choose multiplayer mode
+     */
     private void initPlayers() {
         UIManager.put("Panel.background", LIGHT_GRAY);
         UIManager.put("OptionPane.background", LIGHT_GRAY);

@@ -1,8 +1,8 @@
 package com.Box;
 
-import com.Box.Fly.FlyLayout;
-import com.Box.Float.FloatLayout;
-import com.Box.Jump.JumpLayout;
+import com.Box.Fly.JFly;
+import com.Box.Float.JFloat;
+import com.Box.Jump.JJump;
 import javax.swing.JFrame;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -55,7 +55,7 @@ public class JBox extends JFrame {
         setPreferredSize(new Dimension(LENGTH, height));
         setMaximumSize(new Dimension(LENGTH, height));
         setMinimumSize(new Dimension(LENGTH, height));
-        JumpLayout jpl = new JumpLayout(this, mp, u);
+        JJump jpl = new JJump(this, mp, u);
         boxLayout.add(jpl);
         setLocationRelativeTo(null);
         setContentPane(boxLayout);
@@ -67,7 +67,7 @@ public class JBox extends JFrame {
         setPreferredSize(new Dimension(LENGTH, height));
         setMaximumSize(new Dimension(LENGTH, height));
         setMinimumSize(new Dimension(LENGTH, height));
-        FlyLayout fp = new FlyLayout(this);
+        JFly fp = new JFly(this);
         boxLayout.add(fp);
         setLocationRelativeTo(null);
         setContentPane(boxLayout);
@@ -79,7 +79,7 @@ public class JBox extends JFrame {
         setPreferredSize(new Dimension(LENGTH, height));
         setMaximumSize(new Dimension(LENGTH, height));
         setMinimumSize(new Dimension(LENGTH, height));
-        FloatLayout gs = new FloatLayout(this,  u);
+        JFloat gs = new JFloat(this,  u);
         boxLayout.add(gs);
         setLocationRelativeTo(null);
         setContentPane(boxLayout);

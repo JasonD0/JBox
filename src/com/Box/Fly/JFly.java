@@ -29,7 +29,7 @@ import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 
-public class FlyLayout extends JPanel implements KeyListener, Runnable {
+public class JFly extends JPanel implements KeyListener, Runnable {
     private final static Color AQUA = new Color(127, 255, 212);
     private final static Color LIGHT_GRAY = new Color(51, 51, 51);
     private final static Color DARK_GRAY = new Color(45, 45, 45);
@@ -54,11 +54,11 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
      * Constructor
      * @param g    game frame
      */
-    public FlyLayout(JBox g) {
+    public JFly(JBox g) {
         this.game = g;
         this.rand = new Random();
         this.start = false;
-        p1 = new Player(250, 150);
+        p1 = new JFlyPlayer(250, 150, 0, 50, 50);
         init();
     }
 
@@ -169,17 +169,16 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
      * Move player
      */
     private void movePlayer() {
-        if (!running) return;
         int y = p1.getYOrd();
         // prevent player from going below the screen
         if (y > GAME_HEIGHT - 50) {
             p1.setVelY(0);
-            p1.setYord(GAME_HEIGHT - 50);
+            p1.setYOrd(GAME_HEIGHT - 50);
             endGame();
         }
         y = p1.getYOrd();
         y = (y < 0) ? 0 : y;
-        p1.setYord(y + p1.getVelY());
+        p1.setYOrd(y + p1.getVelY());
     }
 
     /**
@@ -241,24 +240,23 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
     }
 
     /**
-     * Moves player up when the up key is pressed
+     * Change player movement to up
      * @param e
      */
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_UP) p1.setVelY(-5);
-        p1.setYord(p1.getYOrd() + p1.getVelY());
+        if (e.getKeyCode() != KeyEvent.VK_UP) return;
+        p1.setVelY(-5);
     }
 
     /**
-     * Start moving the player down when no keys pressed
+     * Change player movement to down
      * @param e
      */
     @Override
     public void keyReleased(KeyEvent e) {
         if (!start) startTimers();
         p1.setVelY(5);
-        p1.setYord(p1.getYOrd() + p1.getVelY());
     }
 
     /**
@@ -398,7 +396,7 @@ public class FlyLayout extends JPanel implements KeyListener, Runnable {
                     case "Retry":
                         delta = 0;
                         removeObstacles();
-                        p1.setYord(250);
+                        p1.setYOrd(250);
                         p1.setVelY(0);
                         start();
                         break;

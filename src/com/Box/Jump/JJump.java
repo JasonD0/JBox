@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
 
-public class JumpLayout extends JPanel implements KeyListener, Runnable {
+public class JJump extends JPanel implements KeyListener, Runnable {
     private Timer obstacleDelayer; // delays new obstacles
     private Timer gameTimer;        // survival time
     private Timer delay;           // delay before speed increase
@@ -68,12 +68,12 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
      * @param mp    indicates if multiplayer
      * @param u     user
      */
-    public JumpLayout (JBox g, boolean mp, User u) {
+    public JJump (JBox g, boolean mp, User u) {
         game = g;
         multiplayer = mp;
         rand = new Random();
-        p1 = new Player(500, 50);
-        p2 = (!mp) ? null : new Player(500 + OFFSET, 50);
+        p1 = new Player(500, 50, 0, 50, 50);
+        p2 = (!mp) ? null : new Player(500 + OFFSET, 50, 0, 50, 50);
         this.u = u;
         init();
     }
@@ -369,14 +369,14 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
         // player's maximum jump height
         if (y1 < 155) {
             p1.setVelY(PLAYER_VEL + 1);
-            p1.setYord(156);
+            p1.setYOrd(156);
         }
         // stop player from falling below platform
         else if (y1 > GAME_HEIGHT1 - p1.getPlayerHeight()) {
             p1.setVelY(0);
-            p1.setYord(GAME_HEIGHT1 - p1.getPlayerHeight());
+            p1.setYOrd(GAME_HEIGHT1 - p1.getPlayerHeight());
         }
-        p1.setYord(p1.getYOrd() + p1.getVelY());
+        p1.setYOrd(p1.getYOrd() + p1.getVelY());
 
         // moving second player
         if (multiplayer) {
@@ -384,14 +384,14 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
             // player's maximum jump height
             if (y2 < 155 + OFFSET) {
                 p2.setVelY(PLAYER_VEL + 1);
-                p2.setYord(156 + OFFSET);
+                p2.setYOrd(156 + OFFSET);
             }
             // stop player from falling below platform
             else if (y2 > GAME_HEIGHT2 - p2.getPlayerHeight()) {
                 p2.setVelY(0);
-                p2.setYord(GAME_HEIGHT2 - p2.getPlayerHeight());
+                p2.setYOrd(GAME_HEIGHT2 - p2.getPlayerHeight());
             }
-            p2.setYord(p2.getYOrd() + p2.getVelY());
+            p2.setYOrd(p2.getYOrd() + p2.getVelY());
         }
     }
 
@@ -466,7 +466,7 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
             else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
                 if (p1.getPlayerHeight() == PLAYER_HEIGHT) {
                     p1.setPlayerHeight(p1.getPlayerHeight() / 2);
-                    p1.setYord(p1.getYOrd() + p1.getPlayerHeight());
+                    p1.setYOrd(p1.getYOrd() + p1.getPlayerHeight());
                 }
             }
         }
@@ -481,7 +481,7 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
             else if (e.getKeyCode() == KeyEvent.VK_S) {
                 if (p2.getPlayerHeight() == PLAYER_HEIGHT) {
                     p2.setPlayerHeight(p2.getPlayerHeight() / 2);
-                    p2.setYord(p2.getYOrd() + p2.getPlayerHeight());
+                    p2.setYOrd(p2.getYOrd() + p2.getPlayerHeight());
                 }
             }
         }
@@ -529,7 +529,7 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
     private void setOriginalHeight(Player p) {
         if (p.getPlayerHeight() < PLAYER_HEIGHT) {
             p.setPlayerHeight(PLAYER_HEIGHT);
-            p.setYord(p.getYOrd() + p.getPlayerHeight());
+            p.setYOrd(p.getYOrd() + p.getPlayerHeight());
         }
     }
 
@@ -604,13 +604,14 @@ public class JumpLayout extends JPanel implements KeyListener, Runnable {
                         instructions = true;
                         p1_dead = -1;
                         p2_dead = -1;
-                        running = true;
+                        //running = true;
                         paused = false;
                         removeObstacles();
                         obstacleDelayer.setInitialDelay(2000);
-                        initObstacles();
+                        //initObstacles();
                         p1.setPlayerHeight(PLAYER_HEIGHT);
                         if (multiplayer) p2.setPlayerHeight(PLAYER_HEIGHT);
+                        start();
                         startTimers();
                         break;
                 }

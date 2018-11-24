@@ -7,22 +7,16 @@ import java.awt.Color;
 
 public class Player extends JLabel{
 
-    private int playerLength = 50;
-    private int playerHeight = 50;
-    private int x = 0, y = 0, velY = 0;
+    private int playerLength;
+    private int playerHeight;
+    private int x, y, velY;
 
-    public Player(int y, int x) {
+    public Player(int y, int x, int velY, int height, int length) {
         this.y = y;
         this.x = x;
-        initPlayer();
-    }
-
-    private void initPlayer() {
-        setBackground(Color.BLUE);
-        setPreferredSize(new Dimension(100,100));
-        setMaximumSize(new Dimension(100, 100));
-        setMinimumSize(new Dimension(100, 100));
-        setSize(new Dimension(100, 100));
+        this.velY = velY;
+        this.playerHeight = height;
+        this.playerLength = length;
     }
 
     public Rectangle getBoundary() {
@@ -49,32 +43,11 @@ public class Player extends JLabel{
 
     public int getVelY() { return velY; }
 
-    public void setYord(int y) {
+    public void setYOrd(int y) {
         this.y = y;
     }
 
     public void setVelY(int velY) {
         this.velY = velY;
     }
-
-/*    public void movePlayer() {
-
-        if (y < 240) {
-            velY = 6;
-            y = 242;
-        }
-        // create small delay at apex of jump
-        else if (y <= 252 && velY > 0) {
-            velY = 4;
-        }
-        else if (y < 399 && velY > 0) {
-            velY = 6;
-        }
-        else if (y > PLATFORM - playerHeight) {
-            velY = 0;
-            y = PLATFORM - playerHeight;
-        }
-        y += velY;
-
-    }*/
 }

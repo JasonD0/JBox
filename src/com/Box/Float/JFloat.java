@@ -33,7 +33,7 @@ import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 
-public class FloatLayout extends JPanel implements KeyListener, Runnable {
+public class JFloat extends JPanel implements KeyListener, Runnable {
     private final static Color AQUA = new Color(127, 255, 212);
     private final static Color LIGHT_GRAY = new Color(51, 51, 51);
     private final static Color DARK_GRAY = new Color(45, 45, 45);
@@ -64,9 +64,9 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
      * @param g    game frame
      * @param u    user
      */
-    public FloatLayout(JBox g, User u) {
+    public JFloat(JBox g, User u) {
         this.game = g;
-        p1 = new Player(250, 150);
+        p1 = new Player(250, 150, 0, 50, 50);
         rand = new Random();
         this.u = u;
         init();
@@ -263,15 +263,15 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
     private void movePlayer() {
         // prevent players from moving below the bottom platform
         if (p1.getYOrd() > GAME_HEIGHT - 50) {
-            p1.setYord(GAME_HEIGHT - 50);
+            p1.setYOrd(GAME_HEIGHT - 50);
             p1.setVelY(0);
         }
         // prevent players from above the top platform
         if (p1.getYOrd() < 105) {
-            p1.setYord(105);
+            p1.setYOrd(105);
             p1.setVelY(0);
         }
-        p1.setYord(p1.getYOrd() + p1.getVelY());
+        p1.setYOrd(p1.getYOrd() + p1.getVelY());
     }
 
     /**
@@ -330,7 +330,7 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
         }
         // stop player movement
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            p1.setYord(roundNearest50(p1.getYOrd()) + 5);
+            p1.setYOrd(roundNearest50(p1.getYOrd()) + 5);
             p1.setVelY(0);
         }
         // change player direction to down
@@ -338,7 +338,7 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
             p1.setVelY(PLAYER_VEL);
             orientation = 1;
         }
-        p1.setYord(p1.getYOrd() + p1.getVelY());
+        p1.setYOrd(p1.getYOrd() + p1.getVelY());
     }
 
     /**
@@ -541,10 +541,9 @@ public class FloatLayout extends JPanel implements KeyListener, Runnable {
                     case "Retry":
                         defineObstacle(400, 900, 10);
                         delta = 0;
-                        running = true;
                         removeObstacles();
                         obstacleDelayer.setInitialDelay(2000);
-                        initObstacles();
+                        start();
                         startTimers();
                         break;
                 }
