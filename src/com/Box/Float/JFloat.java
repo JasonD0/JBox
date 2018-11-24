@@ -202,8 +202,8 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
      */
     private void movePlayer() {
         // prevent players from moving below the bottom platform
-        if (p1.getYOrd() > jfm.GAME_HEIGHT - 50) {
-            p1.setYOrd(jfm.GAME_HEIGHT - 50);
+        if (p1.getYOrd() > jfm.GAME_HEIGHT - p1.getPlayerHeight()) {
+            p1.setYOrd(jfm.GAME_HEIGHT - p1.getPlayerHeight());
             p1.setVelY(0);
         }
         // prevent players from above the top platform
@@ -235,7 +235,7 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
         if (paused) return;
         // change player direction to up
         if (e.getKeyCode() == KeyEvent.VK_UP) {
-            p1.setVelY(-p1.getVelY());
+            p1.setVelY(-jfm.getPlayerVel());
             orientation = -1;
         }
         // stop player movement
@@ -245,10 +245,9 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
         }
         // change player direction to down
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            p1.setVelY(p1.getVelY());
+            p1.setVelY(jfm.getPlayerVel());
             orientation = 1;
         }
-        p1.setYOrd(p1.getYOrd() + p1.getVelY());
     }
 
     /**
@@ -272,7 +271,7 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
         if (paused) return;
         // unfreeze player
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            p1.setVelY(p1.getVelY()*orientation);
+            p1.setVelY(jfm.getPlayerVel()*orientation);
         }
     }
 
@@ -328,12 +327,12 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
             case 155:
                 jfm.setDelayRange(250, 500);
                 jfm.setObstacleVel(15);
-                p1.setVelY(10);
+                jfm.setPlayerVel(10);
                 break;
             case 250:
                 jfm.setDelayRange(200, 450);
                 jfm.setObstacleVel(18);
-                p1.setVelY(12);
+                jfm.setPlayerVel(12);
                 break;
         }
     }

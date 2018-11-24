@@ -41,7 +41,7 @@ public class Player extends JLabel{
         return y;
     }
 
-    public int getVelY() { return velY; }
+    public int getVelY() { return this.velY; }
 
     public void setYOrd(int y) {
         this.y = y;

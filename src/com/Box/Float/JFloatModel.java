@@ -13,9 +13,11 @@ public class JFloatModel {
     private ArrayList<Obstacle> obstacles;
     private int delayMin, delayMax;
     private int obstacleVel;
+    private int playerVel;
 
     public JFloatModel() {
         this.obstacles = new ArrayList<>();
+        this.playerVel = 7;
     }
 
     public ArrayList<Obstacle> getObstacles() {
@@ -53,5 +55,13 @@ public class JFloatModel {
 
     public void setObstacleVel(int vel) {
         this.obstacleVel = vel;
+    }
+
+    public int getPlayerVel() {
+        return this.playerVel;
+    }
+
+    public void setPlayerVel(int vel) {
+        this.playerVel = vel;
     }
 }
