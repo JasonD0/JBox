@@ -9,18 +9,13 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Random;
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -34,14 +29,6 @@ import javax.swing.Timer;
 import javax.swing.UIManager;
 
 public class JFloat extends JPanel implements KeyListener, Runnable {
-    private final static Color AQUA = new Color(127, 255, 212);
-    private final static Color LIGHT_GRAY = new Color(51, 51, 51);
-    private final static Color DARK_GRAY = new Color(45, 45, 45);
-    private final static int GAME_HEIGHT = 405;
-    private final static int GAME_LENGTH = 1000;
-    private int PLAYER_VEL = 7;
-    private ArrayList<Obstacle> obstacles;
-    private Map<Integer, Integer> rows;
     private Timer obstacleDelayer; // delays new obstacles
     private JBox game;
     private Player p1;
@@ -55,9 +42,9 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
     private int counter;
     private int orientation = 0;
     private Random rand;
-    private int obstacleHeight, obstacleLength, obstacleVel;
     private boolean paused = false;
-    private int delayMin, delayMax;
+    private JFloatView jfv;
+    private JFloatModel jfm;
 
     /**
      * Constructor
@@ -66,8 +53,10 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
      */
     public JFloat(JBox g, User u) {
         this.game = g;
-        p1 = new Player(250, 150, 0, 50, 50);
-        rand = new Random();
+        this.p1 = new Player(250, 150, 0, 50, 50);
+        this.jfv = new JFloatView();
+        this.jfm = new JFloatModel();
+        this.rand = new Random();
         this.u = u;
         init();
     }
@@ -93,18 +82,18 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
      * Sets up the game
      */
     private void init() {
-        setBackground(LIGHT_GRAY);
+        setBackground(jfm.LIGHT_GRAY);
         setFocusTraversalKeysEnabled(false);
         setRequestFocusEnabled(true);
         setFocusable(true);
         setVisible(true);
         addKeyListener(this);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        add(initHeader(AQUA));
-        add(initPlatform());
+        jfv.showHeader(this, jfm.AQUA);
+        jfv.showPlatform(this, jfm.AQUA);
         add(Box.createRigidArea(new Dimension(0, 300)));
-        add(initPlatform());
-        add(initInstructions());
+        jfv.showPlatform(this, jfm.AQUA);
+        jfv.showInstructions(this, jfm.LIGHT_GRAY);
         add(Box.createRigidArea(new Dimension(0, 90)));
         initGameTime();
         initObstacles();
@@ -114,32 +103,16 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
     }
 
     /**
-     * Creates label containing instructions
-     * @return    label
-     */
-    private JLabel initInstructions() {
-        JLabel instructions = new JLabel("", SwingConstants.CENTER);
-        String s = "<html><font color='rgb(127, 255, 212)'>UP/DOWN:</font> MOVE #SPACE# <font color='rgb(127, 255, 212)'>SPACE:</font> STOP #SPACE# <font color='rgb(127, 255, 212)'>P:</font> PAUSE</html>";
-        s = s.replaceAll("#SPACE#",  "&emsp; &emsp; &emsp; &emsp; &emsp; &emsp;");
-        instructions.setText(s);
-        instructions.setFont(new Font(null, Font.BOLD, 20));
-        instructions.setBackground(LIGHT_GRAY);
-        instructions.setForeground(Color.WHITE);
-        return instructions;
-    }
-
-    /**
      * Creates timer to create obstacles at randomised intervals
      */
     private void initObstacles() {
-        defineObstacle(400, 900, 10);
-        obstacles = new ArrayList<>();
-        rows = new HashMap<>();
+        jfm.setDelayRange(400, 900);
+        jfm.setObstacleVel(10);
         obstacleDelayer = new Timer(2000, new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
                 addObstacles();
-                int v = my_rand(delayMax, delayMin);
+                int v = my_rand(jfm.getDelayMax(), jfm.getDelayMin());
                 obstacleDelayer.setDelay(v);
             }
         });
@@ -152,56 +125,9 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
         int numObstacles = (counter >= 35) ? (counter >= 250) ? my_rand(3, 1) : my_rand(2, 1) : 1;
         for (; numObstacles > 0; numObstacles--) {
             int row = my_rand(6, 1) * 50;
-            Obstacle o = new Obstacle(GAME_LENGTH, GAME_HEIGHT - row, obstacleVel, 100, 50);
-            obstacles.add(o);
+            Obstacle o = new Obstacle(jfm.GAME_LENGTH, jfm.GAME_HEIGHT - row, jfm.getObstacleVel(), 100, 50);
+            jfm.addObstacle(o);
         }
-    }
-
-    /**
-     * Checks collision between obstacle and player
-     * @param o    obstacles
-     * @param p    player
-     * @return     true if obstacle not collided with player
-     */
-    private boolean checkCollision(Obstacle o, Player p) {
-        return (p.getXOrd() + p.getPlayerLength() <= o.getX() ||
-                p.getXOrd() >= o.getX() + o.getLength() ||
-                p.getYOrd() + p.getPlayerHeight() <= o.getY() ||
-                p.getYOrd() >= o.getY() + o.getHeight());
-    }
-
-    /**
-     * Creates component showing high score and time
-     * @param c    colour
-     * @return     JLabel
-     */
-    private JLabel initHeader(Color c) {
-        String head = "\tHigh Score \t\t\t\t\t\t\t\t\t\t Time ";
-        head = head.replaceAll("\\t", "         ");
-        JLabel header = new JLabel(head);
-        header.setMaximumSize(new Dimension(1000, 95));
-        header.setMinimumSize(new Dimension(1000, 95));
-        header.setPreferredSize(new Dimension(1000,95));
-        header.setFont(new Font(null, Font.BOLD, 20));
-        header.setForeground(c);
-        //header.setBackground(LIGHT_GRAY);
-        //header.setOpaque(true);
-        return header;
-    }
-
-    /**
-     * Creates bottom platform for the game
-     * @return    JLabel
-     */
-    private JLabel initPlatform() {
-        JLabel platform = new JLabel();
-        platform.setBorder(BorderFactory.createMatteBorder(10, 0, 0, 0, AQUA));
-        platform.setMaximumSize(new Dimension(1000, 10));
-        platform.setMinimumSize(new Dimension(1000, 10));
-        platform.setPreferredSize(new Dimension(1000,10));
-        platform.setBackground(AQUA);
-        //platform.setOpaque(true);
-        return platform;
     }
 
     /**
@@ -235,10 +161,11 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
      * Moves all objects incrementally across the screen
      */
     private void moveObject() {
+        ArrayList<Obstacle> obstacles = jfm.getObstacles();
         for (int i = obstacles.size() - 1; i >= 0 && endGame; i--) {
             // remove non-viewable obstacles
             if (endGame && !obstacles.get(i).inFrame()) {
-                obstacles.remove(i);
+                jfm.removeObstacle(i);
 
             // check collisions
             } else {
@@ -250,11 +177,24 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
     }
 
     /**
+     * Checks collision between obstacle and player
+     * @param o    obstacles
+     * @param p    player
+     * @return     true if obstacle not collided with player
+     */
+    private boolean checkCollision(Obstacle o, Player p) {
+        return (p.getXOrd() + p.getPlayerLength() <= o.getX() ||
+                p.getXOrd() >= o.getX() + o.getLength() ||
+                p.getYOrd() + p.getPlayerHeight() <= o.getY() ||
+                p.getYOrd() >= o.getY() + o.getHeight());
+    }
+
+    /**
      * Remove all obstacles from the game
      */
     private void removeObstacles() {
         endGame = false;
-        obstacles.removeAll(obstacles);
+        jfm.removeAllObstacles();
     }
 
     /**
@@ -262,8 +202,8 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
      */
     private void movePlayer() {
         // prevent players from moving below the bottom platform
-        if (p1.getYOrd() > GAME_HEIGHT - 50) {
-            p1.setYOrd(GAME_HEIGHT - 50);
+        if (p1.getYOrd() > jfm.GAME_HEIGHT - 50) {
+            p1.setYOrd(jfm.GAME_HEIGHT - 50);
             p1.setVelY(0);
         }
         // prevent players from above the top platform
@@ -281,39 +221,9 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.setColor(Color.BLACK);
-        g.fillRect(p1.getXOrd(), p1.getYOrd(), 50, 50);
-        drawHeader(g);
-        drawObstacles(g);
-    }
-
-    /**
-     * Updates time
-     * @param g
-     */
-    private void drawHeader(Graphics g) {
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setFont(new Font(null, Font.BOLD, 20));
-        g2d.setColor(Color.WHITE);
-        int time = counter;
-        g2d.drawString(u.getHighScore("GravityShift") + "", 175, 55);
-        g2d.drawString(time + "", 775, 55);
-    }
-
-    /**
-     * Draws all of the obstacles
-     * @param g
-     */
-    private void drawObstacles(Graphics g) {
-        for (int i = obstacles.size() - 1; i >=0 && endGame; i--) {
-            Obstacle o = null;
-            if (obstacles.size() > 0) o = obstacles.get(i);
-            if (o == null) break;
-            g.setColor(DARK_GRAY);
-            g.fillRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
-            g.setColor(AQUA);
-            g.drawRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
-        }
+        jfv.drawPlayer(g, p1);
+        jfv.drawHeader(g, counter, u);
+        jfv.drawObstacles(g, jfm.getObstacles(), jfm.DARK_GRAY, jfm.AQUA, endGame);
     }
 
     /**
@@ -325,7 +235,7 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
         if (paused) return;
         // change player direction to up
         if (e.getKeyCode() == KeyEvent.VK_UP) {
-            p1.setVelY(-PLAYER_VEL);
+            p1.setVelY(-p1.getVelY());
             orientation = -1;
         }
         // stop player movement
@@ -335,7 +245,7 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
         }
         // change player direction to down
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            p1.setVelY(PLAYER_VEL);
+            p1.setVelY(p1.getVelY());
             orientation = 1;
         }
         p1.setYOrd(p1.getYOrd() + p1.getVelY());
@@ -362,7 +272,7 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
         if (paused) return;
         // unfreeze player
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            p1.setVelY(PLAYER_VEL*orientation);
+            p1.setVelY(p1.getVelY()*orientation);
         }
     }
 
@@ -404,21 +314,26 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
     private void changeDifficulty() {
         switch (counter) {
             case 15:
-                defineObstacle(300, 800, 10);
+                jfm.setDelayRange(300, 800);
+                jfm.setObstacleVel(10);
                 break;
             case 35:
-                defineObstacle(350, 700, 12);
+                jfm.setDelayRange(350, 700);
+                jfm.setObstacleVel(12);
                 break;
             case 85:
-                defineObstacle(300, 550, 13);
+                jfm.setDelayRange(300, 550);
+                jfm.setObstacleVel(13);
                 break;
             case 155:
-                defineObstacle(250, 500, 15);
-                PLAYER_VEL = 10;
+                jfm.setDelayRange(250, 500);
+                jfm.setObstacleVel(15);
+                p1.setVelY(10);
                 break;
             case 250:
-                defineObstacle(200, 450, 18);
-                PLAYER_VEL = 12;
+                jfm.setDelayRange(200, 450);
+                jfm.setObstacleVel(18);
+                p1.setVelY(12);
                 break;
         }
     }
@@ -446,18 +361,6 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
     }
 
     /**
-     * Change obstacle's velocity and rate of creation
-     * @param delayMin       minimum time to create new obstacle
-     * @param delayMax       maximum time to create new obstacle
-     * @param obstacleVel    velocity of the obstacle
-     */
-    private void defineObstacle(int delayMin, int delayMax, int obstacleVel) {
-        this.delayMin = delayMin;
-        this.delayMax = delayMax;
-        this.obstacleVel = obstacleVel;
-    }
-
-    /**
      * Start all timers for the game
      */
     private void startTimers() {
@@ -480,34 +383,47 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
         System.out.println("Game Over");
         u.setHighScore(counter, "GravityShift");
         stopTimers();
-        UIManager.put("Panel.background", LIGHT_GRAY);
-        UIManager.put("OptionPane.background", LIGHT_GRAY);
+        UIManager.put("Panel.background", jfm.LIGHT_GRAY);
+        UIManager.put("OptionPane.background", jfm.LIGHT_GRAY);
 
         JOptionPane pane = new JOptionPane();
         JDialog dialog = pane.createDialog("Game Over!");
         dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(endGameMessage(), BorderLayout.CENTER);
+        pane.setMessage(panel);
+        pane.setOptions(endGameButtons(dialog));
+
+        dialog.setSize(new Dimension(350, 170));
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+    }
+
+    /**
+     * Creates message for end game pop-up
+     * @return
+     */
+    private JLabel endGameMessage() {
         // create label to show time lasted
         String s = "You lasted " + counter + " seconds!";
         JLabel message = new JLabel(s, SwingConstants.CENTER);
         counter = 0;
         message.setForeground(Color.WHITE);
         message.setFont(new Font(null, Font.BOLD, 20));
+        return message;
+    }
 
-        // create buttons for the pop-up component
+    /**
+     * Create buttons for end game pop-up
+     * @return
+     */
+    private Object[] endGameButtons(JDialog dialog) {
         JButton retry = createButton("Retry", dialog);
         JButton home = createButton("Home", dialog);
         JButton exit = createButton("Exit", dialog);
         Object option[] = {retry, home, exit};
-
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(message, BorderLayout.CENTER);
-        pane.setMessage(panel);
-        pane.setOptions(option);
-
-        dialog.setSize(new Dimension(350, 170));
-        dialog.setLocationRelativeTo(null);
-        dialog.setVisible(true);
+        return option;
     }
 
     /**
@@ -519,7 +435,7 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
     private JButton createButton(String option, JDialog dialog) {
         JButton b = new JButton(option);
         b.setFocusable(false);
-        b.setBackground(DARK_GRAY);
+        b.setBackground(jfm.DARK_GRAY);
         b.setForeground(Color.WHITE);
         b.setContentAreaFilled(false);
         b.addActionListener(new ActionListener(){
@@ -527,26 +443,7 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
             public void actionPerformed(ActionEvent e) {
                 JOptionPane.getRootFrame().dispose();
                 dialog.dispose();
-                switch (option) {
-                    case "Exit":
-                        running = false;
-                        game.dispose();
-                        System.exit(0);
-                        break;
-                    case "Home":
-                        running = false;
-                        exited = true;
-                        game.setHome();
-                        break;
-                    case "Retry":
-                        defineObstacle(400, 900, 10);
-                        delta = 0;
-                        removeObstacles();
-                        obstacleDelayer.setInitialDelay(2000);
-                        start();
-                        startTimers();
-                        break;
-                }
+                buttonFunctionality(option);
                 paused = false;
                 orientation = 0;
                 obstacleDelayer.setInitialDelay(2000);
@@ -557,6 +454,34 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
         icon = icon.getScaledInstance(30, 30, Image.SCALE_SMOOTH);
         b.setIcon(new ImageIcon(icon));
         return b;
+    }
+
+    /**
+     * implements functionality of end game pop-up buttons
+     * @param option    indicates the functionality of the button
+     */
+    private void buttonFunctionality(String option) {
+        switch (option) {
+            case "Exit":
+                running = false;
+                game.dispose();
+                System.exit(0);
+                break;
+            case "Home":
+                running = false;
+                exited = true;
+                game.setHome();
+                break;
+            case "Retry":
+                jfm.setDelayRange(400, 900);
+                jfm.setObstacleVel(10);
+                delta = 0;
+                removeObstacles();
+                obstacleDelayer.setInitialDelay(2000);
+                start();
+                startTimers();
+                break;
+        }
     }
 
     @Override

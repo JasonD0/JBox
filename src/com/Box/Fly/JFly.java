@@ -30,25 +30,18 @@ import javax.swing.Timer;
 import javax.swing.UIManager;
 
 public class JFly extends JPanel implements KeyListener, Runnable {
-    private final static Color AQUA = new Color(127, 255, 212);
-    private final static Color LIGHT_GRAY = new Color(51, 51, 51);
-    private final static Color DARK_GRAY = new Color(45, 45, 45);
-    private final static int GAME_HEIGHT = 500;
-    private final static int GAME_LENGTH = 1000;
     private Timer obstacleDelayer;
     private Timer gameTimer;
-    private int obstacleVel, minObstacleHeight;
     private int counter;
-    private double delta;
-    private int minGap, maxGap;
+    private Random rand;
+    private boolean running;
+    private boolean start;
+    private Thread t;
+    private JFlyView jfv;
+    private JFlyModel jfm;
     private JBox game;
     private Player p1;
     private User u;
-    private Random rand;
-    private ArrayList<Obstacle> obstacles;
-    private boolean running = false;
-    private Thread t;
-    private boolean start;
 
     /**
      * Constructor
@@ -56,9 +49,12 @@ public class JFly extends JPanel implements KeyListener, Runnable {
      */
     public JFly(JBox g) {
         this.game = g;
-        this.rand = new Random();
         this.start = false;
-        p1 = new Player(250, 150, 0, 50, 50);
+        this.running = false;
+        this.rand = new Random();
+        this.jfv = new JFlyView();
+        this.jfm = new JFlyModel();
+        this.p1 = new Player(250, 150, 0, 50, 50);
         init();
     }
 
@@ -83,7 +79,7 @@ public class JFly extends JPanel implements KeyListener, Runnable {
      * Set up the game
      */
     private void init() {
-        setBackground(LIGHT_GRAY);
+        setBackground(jfm.LIGHT_GRAY);
         setFocusTraversalKeysEnabled(false);
         setRequestFocusEnabled(true);
         setFocusable(true);
@@ -116,27 +112,27 @@ public class JFly extends JPanel implements KeyListener, Runnable {
      * Creates timer to create obstacles at regular intervals
      */
     private void initObstacles() {
-        obstacles = new ArrayList<>();
-        obstacleVel = 10;
         obstacleDelayer = new Timer(1000, new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                int gap = rand.nextInt(maxGap - minGap + 1) + minGap;
-                int totalObstacleHeight = GAME_HEIGHT - 2*minObstacleHeight - gap;
-                int obstaclePadding = rand.nextInt(totalObstacleHeight) + 1;
-                int obstacleH1 = minObstacleHeight + obstaclePadding;
-                int obstacleH2 = minObstacleHeight + (totalObstacleHeight - obstaclePadding);
-                Obstacle o = new Obstacle(GAME_LENGTH, 0, GAME_HEIGHT - obstacleH2, obstacleVel, 150, obstacleH1, obstacleH2);
-                obstacles.add(o);
+                Obstacle o = generateObstacle();
+                jfm.addObstacle(o);
             }
         });
     }
 
     /**
-     * Remove all obstacles from the game
+     * Create new obstacle pair
+     * @return     Obstacle
      */
-    private void removeObstacles() {
-        obstacles.removeAll(obstacles);
+    private Obstacle generateObstacle() {
+        int gap = rand.nextInt(jfm.maxGap() - jfm.minGap() + 1) + jfm.minGap();
+        int totalObstacleHeight = jfm.GAME_HEIGHT - 2*75 - gap; // 75 is the minimum obstacle height
+        int obstaclePadding = rand.nextInt(totalObstacleHeight) + 1;
+        int obstacleH1 = 75 + obstaclePadding;
+        int obstacleH2 = 75 + (totalObstacleHeight - obstaclePadding);
+        Obstacle o = new Obstacle(jfm.GAME_LENGTH, 0, jfm.GAME_HEIGHT - obstacleH2, 10, 150, obstacleH1, obstacleH2);
+        return o;
     }
 
     /**
@@ -154,9 +150,10 @@ public class JFly extends JPanel implements KeyListener, Runnable {
      */
     private void moveObstacles() {
         if (!running) return;
+        ArrayList<Obstacle> obstacles = jfm.getObstacles();
         for (int i = 0; i < obstacles.size(); i++) {
             Obstacle o = obstacles.get(i);
-            if (!o.inFrame()) obstacles.remove(i);  // remove non-viewable obstacles
+            if (!o.inFrame()) jfm.removeObstacle(i);  // remove non-viewable obstacles
             else {
                 // check collision with player
                 if (checkCollision(o)) o.move();
@@ -170,14 +167,17 @@ public class JFly extends JPanel implements KeyListener, Runnable {
      */
     private void movePlayer() {
         int y = p1.getYOrd();
-        // prevent player from going below the screen
-        if (y > GAME_HEIGHT - 50) {
+        // prevent player from going below the game window
+        if (y > jfm.GAME_HEIGHT - 50) {
             p1.setVelY(0);
-            p1.setYOrd(GAME_HEIGHT - 50);
+            p1.setYOrd(jfm.GAME_HEIGHT - 50);
             endGame();
         }
+        // prevent player from going above the game window
         y = p1.getYOrd();
         y = (y < 0) ? 0 : y;
+
+        // update player position
         p1.setYOrd(y + p1.getVelY());
     }
 
@@ -199,44 +199,9 @@ public class JFly extends JPanel implements KeyListener, Runnable {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (!start) drawInstructions(g);
-        drawPlayer(g);
-        drawObstacles(g);
-    }
-
-    /**
-     * Shows instructions on how to play the game
-     * @param g
-     */
-    private void drawInstructions(Graphics g) {
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setFont(new Font(null, Font.BOLD, 25));
-        g2d.setColor(Color.WHITE);
-        g2d.drawString("Press any key to start. Press up to move.", 250, 100);
-    }
-
-    /**
-     * Draws the player
-     * @param g
-     */
-    private void drawPlayer(Graphics g) {
-        g.setColor(Color.BLACK);
-        g.fillRect(p1.getXOrd(), p1.getYOrd(), p1.getPlayerLength(), p1.getPlayerHeight());
-    }
-
-    /**
-     * Draw all obstacles
-     * @param g
-     */
-    private void drawObstacles(Graphics g) {
-        for (Obstacle o : obstacles) {
-            g.setColor(DARK_GRAY);
-            g.fillRect(o.getX(), o.getY(), o.getLength(), o.getTopH());
-            g.fillRect(o.getX(), o.getY2(), o.getLength(), o.getBotH());
-            g.setColor(AQUA);
-            g.drawRect(o.getX(), o.getY(), o.getLength(), o.getTopH());
-            g.drawRect(o.getX(), o.getY2(), o.getLength(), o.getBotH());
-        }
+        if (!start) jfv.drawInstructions(g);
+        jfv.drawPlayer(g, p1);
+        jfv.drawObstacles(g, jfm.getObstacles(), jfm.DARK_GRAY, jfm.AQUA);
     }
 
     /**
@@ -267,7 +232,7 @@ public class JFly extends JPanel implements KeyListener, Runnable {
         long lastTime = System.nanoTime();
         final double fps = 60.0;
         final double updateInterval = 1000000000 / fps;
-        delta = 0;
+        double delta = 0;
         while (running) {
             long now = System.nanoTime();
             delta += (now - lastTime)/updateInterval;
@@ -311,21 +276,18 @@ public class JFly extends JPanel implements KeyListener, Runnable {
      * Change minimum and maximum gap for the player to go through
      */
     private void changeDifficulty() {
-        minObstacleHeight = 75;
         switch (counter) {
             case 0:
-                maxGap = 230;
-                minGap = 180;
+                jfm.setGapRange(180, 230);
                 break;
             case 10:
-                maxGap = 200;
-                minGap = 150;
+                jfm.setGapRange(150, 200);
                 break;
             case 50:
-                minGap = 120;
+                jfm.setGapRange(120, 180);
                 break;
             case 100:
-                maxGap = 120;
+                jfm.setGapRange(120, 120);
                 break;
         }
     }
@@ -336,34 +298,48 @@ public class JFly extends JPanel implements KeyListener, Runnable {
     private void endGame() {
         System.out.println("Game Over");
         stopTimers();
-        UIManager.put("Panel.background", LIGHT_GRAY);
-        UIManager.put("OptionPane.background", LIGHT_GRAY);
+        UIManager.put("Panel.background", jfm.LIGHT_GRAY);
+        UIManager.put("OptionPane.background", jfm.LIGHT_GRAY);
 
         JOptionPane pane = new JOptionPane();
         JDialog dialog = pane.createDialog("Game Over!");
         dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
-        // create the message showing time lasted on the component
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(endGameMessage(), BorderLayout.CENTER);
+        pane.setMessage(panel);
+        pane.setOptions(endGameButtons(dialog));
+
+        dialog.setSize(new Dimension(350, 170));
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+    }
+
+    /**
+     * Create end game message
+     * @return    JLabel
+     */
+    private JLabel endGameMessage() {
         String s = "You lasted " + counter + " seconds!";
         JLabel message = new JLabel(s, SwingConstants.CENTER);
         counter = 0;
         message.setForeground(Color.WHITE);
         message.setFont(new Font(null, Font.BOLD, 20));
+        return message;
+    }
 
+    /**
+     * Create all buttons for the end game pop-up
+     * @param dialog
+     * @return     array of JButtons
+     */
+    private Object[] endGameButtons(JDialog dialog) {
         // create all the buttons on the component
         JButton retry = createButton("Retry", dialog);
         JButton home = createButton("Home", dialog);
         JButton exit = createButton("Exit", dialog);
         Object option[] = {retry, home, exit};
-
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(message, BorderLayout.CENTER);
-        pane.setMessage(panel);
-        pane.setOptions(option);
-
-        dialog.setSize(new Dimension(350, 170));
-        dialog.setLocationRelativeTo(null);
-        dialog.setVisible(true);
+        return option;
     }
 
     /**
@@ -375,32 +351,15 @@ public class JFly extends JPanel implements KeyListener, Runnable {
     private JButton createButton(String option, JDialog dialog) {
         JButton b = new JButton(option);
         b.setFocusable(false);
-        b.setBackground(DARK_GRAY);
+        b.setBackground(jfm.DARK_GRAY);
         b.setForeground(Color.WHITE);
         b.setContentAreaFilled(false);
-        b.addActionListener(new ActionListener(){
+        b.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JOptionPane.getRootFrame().dispose();
                 dialog.dispose();
-                switch (option) {
-                    case "Exit":
-                        running = false;
-                        game.dispose();
-                        System.exit(0);
-                        break;
-                    case "Home":
-                        running = false;
-                        game.setHome();
-                        break;
-                    case "Retry":
-                        delta = 0;
-                        removeObstacles();
-                        p1.setYOrd(250);
-                        p1.setVelY(0);
-                        start();
-                        break;
-                }
+                buttonFunctionality(option);
             }
         });
         String image = option + ".png";
@@ -408,6 +367,30 @@ public class JFly extends JPanel implements KeyListener, Runnable {
         icon = icon.getScaledInstance(30, 30, Image.SCALE_SMOOTH);
         b.setIcon(new ImageIcon(icon));
         return b;
+    }
+
+    /**
+     * implements the functionality of the end game pop-up buttons
+     * @param option    indicates the functionality of the button
+     */
+    private void buttonFunctionality(String option) {
+        switch (option) {
+            case "Exit":
+                running = false;
+                game.dispose();
+                System.exit(0);
+                break;
+            case "Home":
+                running = false;
+                game.setHome();
+                break;
+            case "Retry":
+                jfm.removeAllObstacles();
+                p1.setYOrd(250);
+                p1.setVelY(0);
+                start();
+                break;
+        }
     }
 
     @Override
