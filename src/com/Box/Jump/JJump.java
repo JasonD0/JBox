@@ -38,29 +38,18 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     private Random rand;
     private Player p1, p2;
     private User u;
-    private ArrayList<Obstacle> obstacles;
-    private int obstacleLength, obstacleHeight, obstacleVel;
-    private int delayMin, delayMax;
+    private int obstacleLength, obstacleHeight;
     private int counter;
-    private double delta;
     private boolean instructions = true;
     private boolean endGame = false;
     private boolean paused = false;
     private boolean exited = false;     // exited jumpover game
-    private final static int GAME_LENGTH = 1000;
-    private final static int GAME_HEIGHT1 = 450;
-    private final static int GAME_HEIGHT2 = 916;
-    private final static int PLAYER_HEIGHT = 50;
-    private final static Color AQUA = new Color(127, 255, 212);
-    private final static Color LIGHT_GRAY = new Color(51, 51, 51);
-    private final static Color DARK_GRAY = new Color(45, 45, 45);
-    private int PLAYER_VEL = 10;
-    private final static int VEL_ADJUSTMENT = 0;
-    private final static int OFFSET = 466;   // offset height for player2 and their obstacles
     private boolean running = false;
     private Thread t;
     private boolean multiplayer;
     private int p1_dead = -1, p2_dead = -1;
+    private JJumpView jjv;
+    private JJumpModel jjm;
 
     /**
      * Constructor
@@ -69,11 +58,13 @@ public class JJump extends JPanel implements KeyListener, Runnable {
      * @param u     user
      */
     public JJump (JBox g, boolean mp, User u) {
-        game = g;
-        multiplayer = mp;
-        rand = new Random();
-        p1 = new Player(500, 50, 0, 50, 50);
-        p2 = (!mp) ? null : new Player(500 + OFFSET, 50, 0, 50, 50);
+        this.game = g;
+        this.multiplayer = mp;
+        this.rand = new Random();
+        this.p1 = new Player(500, 50, 0, 50, 50);
+        this.p2 = (!mp) ? null : new Player(500 + jjm.OFFSET, 50, 0, 50, 50);
+        this.jjv = new JJumpView();
+        this.jjm = new JJumpModel();
         this.u = u;
         init();
     }
@@ -82,16 +73,16 @@ public class JJump extends JPanel implements KeyListener, Runnable {
      * Sets up game
      */
     private void init() {
-        setBackground(LIGHT_GRAY);
+        setBackground(jjm.LIGHT_GRAY);
         setFocusTraversalKeysEnabled(false);
         setRequestFocusEnabled(true);
         setFocusable(true);
         setVisible(true);
         addKeyListener(this);
         setLayout(new BorderLayout());
-        add(initPlatform(), BorderLayout.SOUTH);
-        if (multiplayer) add(initHeader(Color.CYAN), BorderLayout.CENTER);
-        add(initHeader(AQUA), BorderLayout.NORTH);
+        jjv.initPlatform(this, BorderLayout.SOUTH, multiplayer, jjm.AQUA, jjm.LIGHT_GRAY);
+        if (multiplayer) jjv.initHeader(this, BorderLayout.CENTER, Color.CYAN);
+        jjv.initHeader(this, BorderLayout.NORTH, jjm.AQUA);
         initGameTime();
         initObstacles();
         initSpeedIncreaseDelayer();
@@ -117,59 +108,32 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     }
 
     /**
-     * Create component showing high score and time
-     * @param c    color
-     * @return     JLabel
-     */
-    private JLabel initHeader(Color c) {
-        String head = "\tHigh Score \t\t\t\t\t\t\t\t\t\t Time ";
-        head = head.replaceAll("\\t", "         ");
-        JLabel header = new JLabel(head);
-        header.setMaximumSize(new Dimension(1000, 95));
-        header.setMinimumSize(new Dimension(1000, 95));
-        header.setPreferredSize(new Dimension(1000,95));
-        header.setFont(new Font(null, Font.BOLD, 20));
-        header.setForeground(c);
-        //header.setBackground(LIGHT_GRAY);
-        //header.setOpaque(true);
-        return header;
-    }
-
-    /**
-     * Create platform for the player and obstacles
-     * @return
-     */
-    private JLabel initPlatform() {
-        JLabel platform = new JLabel();
-        Color c = (multiplayer) ? Color.CYAN : AQUA;
-        platform.setBorder(BorderFactory.createMatteBorder(10, 0, 0, 0, c));
-        platform.setMaximumSize(new Dimension(1000, 45));
-        platform.setMinimumSize(new Dimension(1000, 45));
-        platform.setPreferredSize(new Dimension(1000,45));
-        platform.setBackground(LIGHT_GRAY);
-        platform.setOpaque(true);
-        return platform;
-    }
-
-    /**
      * Create timer for creating obstacles at randomised intervals
      */
     private void initObstacles() {
-        defineObstacle(975, 2000, 10 - VEL_ADJUSTMENT);
-        obstacles = new ArrayList<>();
+        jjm.setDelayRange(975, 2000);
+        jjm.setObstacleVel(10);
         obstacleDelayer = new Timer(2000, new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                int prob = my_rand(100, 1);
-                int y = (counter < 35) ? 0 : (prob <= 30) ? my_rand(50, 26) : 0;
-                obstacleHeight = (counter < 85) ? 50 : (prob <= 30) ? my_rand(150, 100 - prob) : my_rand(150,50);
-                obstacleLength = (counter < 85) ? 100 : my_rand(250, 100);
-                Obstacle o = new Obstacle(GAME_LENGTH, GAME_HEIGHT1 - obstacleHeight - y, obstacleVel, obstacleLength, obstacleHeight);
-                obstacles.add(o);
-                int v = my_rand(delayMax, delayMin);
+                jjm.addObstacle(generateObstacle());
+                int v = my_rand(jjm.getDelayMax(), jjm.getDelayMin());
                 obstacleDelayer.setDelay(v);
             }
         });
+    }
+
+    /**
+     * Create new obstacle
+     * @return    Obstacle
+     */
+    private Obstacle generateObstacle() {
+        int prob = my_rand(100, 1);
+        int y = (counter < 35) ? 0 : (prob <= 30) ? my_rand(50, 26) : 0;
+        obstacleHeight = (counter < 85) ? 50 : (prob <= 30) ? my_rand(150, 100 - prob) : my_rand(150,50);
+        obstacleLength = (counter < 85) ? 100 : my_rand(250, 100);
+        Obstacle o = new Obstacle(jjm.GAME_LENGTH, jjm.GAME_HEIGHT1 - obstacleHeight - y, jjm.getObstacleVel(), obstacleLength, obstacleHeight);
+        return o;
     }
 
     /**
@@ -198,7 +162,8 @@ public class JJump extends JPanel implements KeyListener, Runnable {
                 counter++;
                 timer.setText("Time    " + counter);
                 if (counter == 15 || counter == 35 || counter == 85 || counter == 155 || counter == 300) changeDifficulty();
-                if (counter == 0 || counter == 15 || counter == 35 || counter == 85) instructions = true;
+                if (counter == 0 || counter == 15 || counter == 35) instructions = true;
+                else if (counter >= 40) instructions = false;
             }
         });
     }
@@ -210,119 +175,14 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        drawPlayer(g);
-        drawHeader(g);
-        if (instructions) drawInstructions(g);
-        if (p1_dead > 0) drawGameOver(g, 225);
-        if (multiplayer && p2_dead > 0) drawGameOver(g, 675);
-        drawObstacles(g);
-        // hides glitching player
-        g.setColor(LIGHT_GRAY);
-        g.fillRect(0, 451, 100, 75);
-        if (multiplayer) drawPlatform(g);
-    }
-
-    /**
-     * Draws game over screen when collision occurs for multiplayer
-     * @param g
-     * @param y    y ordinate to show the game over message
-     */
-    private void drawGameOver(Graphics g, int y) {
-        g.setColor(Color.WHITE);
-        g.setFont(new Font(null, Font.BOLD, 100));
-        g.drawString("Game Over", 220, y);
-    }
-
-    /**
-     * Draws platform for the player and obstacles
-     * @param g
-     */
-    private void drawPlatform(Graphics g) {
-        g.setColor(AQUA);
-        g.fillRect(0, 450, 1000, 10);
-    }
-
-    /**
-     * Shows time and high score
-     * @param g
-     */
-    private void drawHeader(Graphics g) {
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setFont(new Font(null, Font.BOLD, 20));
-        g2d.setColor(Color.WHITE);
-
-        int time = counter;
-        // extra header for second player
-        if (multiplayer) {
-            time = (p2_dead > 0) ? p2_dead : counter;
-            g2d.drawString(u.getHighScore("JumpOver") + "", 175, 513);
-            g2d.drawString(time + "", 775, 513);
-            time = (p1_dead > 0) ? p1_dead : counter;
-        }
-
-        g2d.drawString(u.getHighScore("JumpOver") + "", 175, 55);
-        g2d.drawString(time + "", 775, 55);
-    }
-
-    /**
-     * Draws all obstacles
-     * @param g
-     */
-    private void drawObstacles(Graphics g) {
-        for (Obstacle o : obstacles) {
-            if (p1_dead == -1) {
-                g.setColor(DARK_GRAY);
-                g.fillRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
-                g.setColor(AQUA);
-                g.drawRect(o.getX(), o.getY(), o.getLength(), o.getHeight());
-            }
-            // draws obstacles for the second player
-            if (multiplayer && p2_dead == -1) {
-                g.setColor(DARK_GRAY);
-                g.fillRect(o.getX(), o.getY() + OFFSET, o.getLength(), o.getHeight());
-                g.setColor(Color.CYAN);
-                g.drawRect(o.getX(), o.getY() + OFFSET, o.getLength(), o.getHeight());
-            }
-        }
-    }
-
-    /**
-     * Draws player(s)
-     * @param g
-     */
-    private void drawPlayer(Graphics g) {
-        g.setColor(Color.BLACK);
-        g.fillRect(p1.getXOrd(), p1.getYOrd(), p1.getPlayerLength(), p1.getPlayerHeight());
-
-        // draws second player
-        if (multiplayer) {
-            g.setColor(Color.WHITE);
-            g.fillRect(p2.getXOrd(), p2.getYOrd(), p2.getPlayerLength(), p2.getPlayerHeight());
-        }
-    }
-
-    /**
-     * Shows instructions
-     * @param g
-     */
-    private void drawInstructions(Graphics g) {
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setFont(new Font(null, Font.BOLD, 25));
-        g2d.setColor(Color.WHITE);
-
-        if (p1_dead == -1) {
-            if (counter < 5) g2d.drawString("PRESS UP TO JUMP", 360, 225);
-            else if (counter >= 15 && counter < 20) g2d.drawString("PRESS P TO PAUSE/UNPAUSE", 300, 225);
-            else if (counter >= 35 && counter < 40) g2d.drawString("PRESS DOWN TO DUCK", 333, 225);
-            else instructions = false;
-        }
-        // shows instructions for the second player
-        if (multiplayer) {
-            if (p2_dead > 0) return;
-            if (counter < 5) g2d.drawString("PRESS W TO JUMP", 360, 675);
-            else if (counter >= 15 && counter < 20) g2d.drawString("PRESS ESC TO PAUSE/UNPAUSE", 285, 675);
-            else if (counter >= 35 && counter < 40) g2d.drawString("PRESS S TO DUCK", 363, 675);
-        }
+        jjv.drawPlayer(g, p1, p2, multiplayer);
+        jjv.drawHeader(g, counter, multiplayer, p1_dead, p2_dead, u);
+        if (instructions) jjv.drawInstructions(g, p1_dead, p2_dead, multiplayer, counter);
+        if (p1_dead > 0) jjv.drawGameOver(g, 225);
+        if (multiplayer && p2_dead > 0) jjv.drawGameOver(g, 675);
+        jjv.drawObstacles(g, jjm.getObstacles(), jjm.DARK_GRAY, jjm.AQUA, jjm.OFFSET, p1_dead, p2_dead, multiplayer);
+        jjv.hideGlitch(g, jjm.LIGHT_GRAY);
+        if (multiplayer) jjv.drawPlatform(g, jjm.AQUA);
     }
 
     /**
@@ -332,28 +192,15 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     public void actionPerformed(/*ActionEvent e*/) {
         if (paused) return;
         requestFocusInWindow();
-        Iterator<Obstacle> itr = obstacles.iterator();
+        Iterator<Obstacle> itr = jjm.getObstacles().iterator();
         // check all obstacles for collision and remove obstacles that are not on the screen
         while (itr.hasNext() && endGame != false) {
             Obstacle o = itr.next();
             if (!o.inFrame() && endGame != false) {
                 itr.remove();
             } else {
-                if (multiplayer && p2_dead == -1) {
-                    if (checkCollision(o, p2, OFFSET)) {
-                        o.move();
-                    } else {
-                        p2_dead = counter;
-                    }
-                }
-                if (p1_dead == -1) {
-                    if (checkCollision(o, p1, 0)) {
-                        if ((multiplayer && p2_dead > 0) || !multiplayer) o.move();
-                    } else {
-                        p1_dead = counter;
-                    }
-                    if (!multiplayer && p1_dead > 0) endGame();
-                }
+                if (multiplayer && p2_dead == -1) moveObstacle1(o);
+                if (p1_dead == -1) moveObstacle2(o);
                 if (p1_dead > 0 && p2_dead > 0) endGame();
             }
         }
@@ -362,37 +209,57 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     }
 
     /**
+     * Move obstacle for player 1
+     * @param o
+     */
+    private void moveObstacle1(Obstacle o) {
+        if (checkCollision(o, p2, jjm.OFFSET)) {
+            o.move();
+        } else {
+            p2_dead = counter;
+        }
+    }
+
+    /**
+     * Move obstacle for player 2
+     * @param o
+     */
+    private void moveObstacle2(Obstacle o) {
+        if (checkCollision(o, p1, 0)) {
+            if ((multiplayer && p2_dead > 0) || !multiplayer) o.move();
+        } else {
+            p1_dead = counter;
+        }
+        if (!multiplayer && p1_dead > 0) endGame();
+    }
+
+    /**
      * Moves player(s) up or down
      */
     private void movePlayer() {
-        int y1 = p1.getYOrd();
+        updateYOrd(p1.getYOrd(), p1, jjm.GAME_HEIGHT1, 0); // move first player
+        if (multiplayer) updateYOrd(p2.getYOrd(), p2, jjm.GAME_HEIGHT2, jjm.OFFSET); // move second player
+    }
+
+    /**
+     * Updates y ordinate of player
+     * @param y
+     * @param p
+     * @param gameHeight
+     * @param offset
+     */
+    private void updateYOrd(int y, Player p, int gameHeight, int offset) {
         // player's maximum jump height
-        if (y1 < 155) {
-            p1.setVelY(PLAYER_VEL + 1);
-            p1.setYOrd(156);
+        if (y < 155 + offset) {
+            p.setVelY(jjm.getPlayerVel() + 1);
+            p.setYOrd(156 + offset);
         }
         // stop player from falling below platform
-        else if (y1 > GAME_HEIGHT1 - p1.getPlayerHeight()) {
-            p1.setVelY(0);
-            p1.setYOrd(GAME_HEIGHT1 - p1.getPlayerHeight());
+        else if (y > gameHeight - p.getPlayerHeight()) {
+            p.setVelY(0);
+            p.setYOrd(gameHeight - p.getPlayerHeight());
         }
-        p1.setYOrd(p1.getYOrd() + p1.getVelY());
-
-        // moving second player
-        if (multiplayer) {
-            int y2 = p2.getYOrd();
-            // player's maximum jump height
-            if (y2 < 155 + OFFSET) {
-                p2.setVelY(PLAYER_VEL + 1);
-                p2.setYOrd(156 + OFFSET);
-            }
-            // stop player from falling below platform
-            else if (y2 > GAME_HEIGHT2 - p2.getPlayerHeight()) {
-                p2.setVelY(0);
-                p2.setYOrd(GAME_HEIGHT2 - p2.getPlayerHeight());
-            }
-            p2.setYOrd(p2.getYOrd() + p2.getVelY());
-        }
+        p.setYOrd(p.getYOrd() + p.getVelY());
     }
 
     /**
@@ -414,11 +281,7 @@ public class JJump extends JPanel implements KeyListener, Runnable {
      */
     private void removeObstacles() {
         endGame = false;
-        Iterator<Obstacle> itr = obstacles.iterator();
-        while (itr.hasNext()) {
-            itr.next();
-            itr.remove();
-        }
+        jjm.removeAllObstacles();
     }
 
     /**
@@ -427,21 +290,26 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     private void changeDifficulty() {
         switch (counter) {
             case 15:
-                defineObstacle(850, 1550, 12 - VEL_ADJUSTMENT);
+                jjm.setDelayRange(850, 1550);
+                jjm.setObstacleVel(12);
                 break;
             case 35:
-                defineObstacle(750, 1250, 18 - VEL_ADJUSTMENT);
+                jjm.setDelayRange(750, 1250);
+                jjm.setObstacleVel(18);
                 break;
             case 85:
-                defineObstacle(800, 1400, 22 - VEL_ADJUSTMENT);
+                jjm.setDelayRange(800, 1400);
+                jjm.setObstacleVel(22);
                 break;
             case 155:
-                defineObstacle(750, 1350, 26 - VEL_ADJUSTMENT);
-                PLAYER_VEL = 12;
+                jjm.setDelayRange(750, 1350);
+                jjm.setObstacleVel(26);
+                jjm.setPlayerVel(12);
                 break;
             case 300:
-                defineObstacle(850, 1400, 32 - VEL_ADJUSTMENT);
-                PLAYER_VEL = 14;
+                jjm.setDelayRange(850, 1400);
+                jjm.setObstacleVel(32);
+                jjm.setPlayerVel(14);
                 break;
         }
         obstacleDelayer.stop();
@@ -449,40 +317,32 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     }
 
     /**
-     * let player(s) jump/crouch
+     * Change player velocity, direction and size(crouch)
      * @param e
      */
     @Override
     public void keyPressed(KeyEvent e) {
         if (paused) return;
-        // check player on platform
-        if (p1.getYOrd() == GAME_HEIGHT1 - p1.getPlayerHeight()) {
-            // player jumped
-            if (e.getKeyCode() == KeyEvent.VK_UP) {
-                setOriginalHeight(p1);
-                p1.setVelY(-PLAYER_VEL);
-            }
-            // player crouched
-            else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-                if (p1.getPlayerHeight() == PLAYER_HEIGHT) {
-                    p1.setPlayerHeight(p1.getPlayerHeight() / 2);
-                    p1.setYOrd(p1.getYOrd() + p1.getPlayerHeight());
-                }
-            }
-        }
+        if (p1.getYOrd() == jjm.GAME_HEIGHT1 - p1.getPlayerHeight()) updatePlayer(e, p1);
+        if (multiplayer && p2.getYOrd() == jjm.GAME_HEIGHT2 - p2.getPlayerHeight()) updatePlayer(e, p2);
+    }
 
-        if (multiplayer && p2.getYOrd() == GAME_HEIGHT2 - p2.getPlayerHeight()) {
-            // player2 jumped
-            if (e.getKeyCode() == KeyEvent.VK_W) {
-                setOriginalHeight(p2);
-                p2.setVelY(-PLAYER_VEL);
-            }
-            // player2 crouched
-            else if (e.getKeyCode() == KeyEvent.VK_S) {
-                if (p2.getPlayerHeight() == PLAYER_HEIGHT) {
-                    p2.setPlayerHeight(p2.getPlayerHeight() / 2);
-                    p2.setYOrd(p2.getYOrd() + p2.getPlayerHeight());
-                }
+    /**
+     * Update player velocity and size
+     * @param e
+     * @param p
+     */
+    private void updatePlayer(KeyEvent e, Player p) {
+        // player jumped
+        if (e.getKeyCode() == KeyEvent.VK_UP) {
+            setOriginalHeight(p);
+            p.setVelY(-jjm.getPlayerVel());
+        }
+        // player crouched
+        else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+            if (p.getPlayerHeight() == jjm.PLAYER_HEIGHT) {
+                p.setPlayerHeight(p.getPlayerHeight() / 2);
+                p.setYOrd(p.getYOrd() + p.getPlayerHeight());
             }
         }
     }
@@ -493,7 +353,7 @@ public class JJump extends JPanel implements KeyListener, Runnable {
         if (e.getKeyCode() == KeyEvent.VK_P || e.getKeyCode() == KeyEvent.VK_ESCAPE) {
             if (!paused) {
                 paused = true;
-                int v = my_rand(delayMax, delayMin) - 200;
+                int v = my_rand(jjm.getDelayMax(), jjm.getDelayMin()) - 200;
                 obstacleDelayer.setInitialDelay(v);
                 stopTimers();
             } else {
@@ -503,22 +363,20 @@ public class JJump extends JPanel implements KeyListener, Runnable {
         }
         if (paused) return;
 
-        // check player1 on platform
-        if (p1.getYOrd() == GAME_HEIGHT1 - p1.getPlayerHeight()) {
-            // player2 jumped
-            if (e.getKeyCode() == KeyEvent.VK_UP) {
-                setOriginalHeight(p1);
-                p1.setVelY(-PLAYER_VEL);
-            }
-        }
+        // update size and velocity of player
+        if (p1.getYOrd() == jjm.GAME_HEIGHT1 - p1.getPlayerHeight()) checkOnPlatform(p1, e);
+        if (multiplayer && p2.getYOrd() == jjm.GAME_HEIGHT2 - p2.getPlayerHeight()) checkOnPlatform(p2, e);
+    }
 
-        // check player2 on platform
-        if (multiplayer && p2.getYOrd() == GAME_HEIGHT2 - p2.getPlayerHeight()) {
-            // player2 jumped
-            if (e.getKeyCode() == KeyEvent.VK_W) {
-                setOriginalHeight(p2);
-                p2.setVelY(-PLAYER_VEL);
-            }
+    /**
+     * Change player size and velocity if on platform
+     * @param p
+     * @param e
+     */
+    private void checkOnPlatform(Player p, KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_W) {
+            setOriginalHeight(p);
+            p.setVelY(-jjm.getPlayerVel());
         }
     }
 
@@ -527,8 +385,8 @@ public class JJump extends JPanel implements KeyListener, Runnable {
      * @param p
      */
     private void setOriginalHeight(Player p) {
-        if (p.getPlayerHeight() < PLAYER_HEIGHT) {
-            p.setPlayerHeight(PLAYER_HEIGHT);
+        if (p.getPlayerHeight() < jjm.PLAYER_HEIGHT) {
+            p.setPlayerHeight(jjm.PLAYER_HEIGHT);
             p.setYOrd(p.getYOrd() + p.getPlayerHeight());
         }
     }
@@ -540,34 +398,47 @@ public class JJump extends JPanel implements KeyListener, Runnable {
         System.out.println("Game Over");
         u.setHighScore(counter, "JumpOver");
         stopTimers();
-        UIManager.put("Panel.background", LIGHT_GRAY);
-        UIManager.put("OptionPane.background", LIGHT_GRAY);
+        UIManager.put("Panel.background", jjm.LIGHT_GRAY);
+        UIManager.put("OptionPane.background", jjm.LIGHT_GRAY);
 
         JOptionPane pane = new JOptionPane();
         JDialog dialog = pane.createDialog("Game Over!");
         dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
-        // create message showing winner if multiplayer or time lasted
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(endGameMessage(), BorderLayout.CENTER);
+        pane.setMessage(panel);
+        pane.setOptions(endGameButtons(dialog));
+
+        dialog.setSize(new Dimension(350, 170));
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+    }
+
+    /**
+     * Create end game pop-up message
+     * @return    JLabel
+     */
+    private JLabel endGameMessage() {
         String s = (multiplayer) ? (p1_dead == p2_dead) ? "Tied!" : (p1_dead > p2_dead) ? "Player 1 Wins!" : "Player 2 Wins!" : "You lasted " + counter + " seconds!";
         JLabel message = new JLabel(s, SwingConstants.CENTER);
         counter = 0;
         message.setForeground(Color.WHITE);
         message.setFont(new Font(null, Font.BOLD, 20));
+        return message;
+    }
 
-        // create buttons for the pop-up component
+    /**
+     * Create end game pop-up buttons
+     * @param dialog
+     * @return           array of JButtons
+     */
+    private Object[] endGameButtons(JDialog dialog) {
         JButton retry = createButton("Retry", dialog);
         JButton home = createButton("Home", dialog);
         JButton exit = createButton("Exit", dialog);
         Object option[] = {retry, home, exit};
-
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(message, BorderLayout.CENTER);
-        pane.setMessage(panel);
-        pane.setOptions(option);
-
-        dialog.setSize(new Dimension(350, 170));
-        dialog.setLocationRelativeTo(null);
-        dialog.setVisible(true);
+        return option;
     }
 
     /**
@@ -579,7 +450,7 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     private JButton createButton(String option, JDialog dialog) {
         JButton b = new JButton(option);
         b.setFocusable(false);
-        b.setBackground(DARK_GRAY);
+        b.setBackground(jjm.DARK_GRAY);
         b.setForeground(Color.WHITE);
         b.setContentAreaFilled(false);
         b.addActionListener(new ActionListener(){
@@ -587,34 +458,7 @@ public class JJump extends JPanel implements KeyListener, Runnable {
             public void actionPerformed(ActionEvent e) {
                 JOptionPane.getRootFrame().dispose();
                 dialog.dispose();
-                switch (option) {
-                    case "Exit":
-                        running = false;
-                        game.dispose();
-                        System.exit(0);
-                        break;
-                    case "Home":
-                        running = false;
-                        exited = true;
-                        game.setHome();
-                        break;
-                    case "Retry":
-                        u.getHighScore("JumpOver");
-                        delta = 0;
-                        instructions = true;
-                        p1_dead = -1;
-                        p2_dead = -1;
-                        //running = true;
-                        paused = false;
-                        removeObstacles();
-                        obstacleDelayer.setInitialDelay(2000);
-                        //initObstacles();
-                        p1.setPlayerHeight(PLAYER_HEIGHT);
-                        if (multiplayer) p2.setPlayerHeight(PLAYER_HEIGHT);
-                        start();
-                        startTimers();
-                        break;
-                }
+                buttonFunctionality(option);
             }
         });
         String image = option + ".png";
@@ -625,6 +469,37 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     }
 
     /**
+     * implements functionality of end game pop-up buttons
+     */
+    private void buttonFunctionality(String option) {
+        switch (option) {
+            case "Exit":
+                running = false;
+                game.dispose();
+                System.exit(0);
+                break;
+            case "Home":
+                running = false;
+                exited = true;
+                game.setHome();
+                break;
+            case "Retry":
+                u.getHighScore("JumpOver");
+                instructions = true;
+                p1_dead = -1;
+                p2_dead = -1;
+                paused = false;
+                removeObstacles();
+                obstacleDelayer.setInitialDelay(2000);
+                p1.setPlayerHeight(jjm.PLAYER_HEIGHT);
+                if (multiplayer) p2.setPlayerHeight(jjm.PLAYER_HEIGHT);
+                start();
+                startTimers();
+                break;
+        }
+    }
+
+    /**
      * Get random number between an interval
      * @param upper     upper limit of the interval
      * @param lower     lower limit of the interval
@@ -632,18 +507,6 @@ public class JJump extends JPanel implements KeyListener, Runnable {
      */
     private int my_rand(int upper, int lower) {
         return rand.nextInt(upper - lower + 1) + lower;
-    }
-
-    /**
-     * Change obstacle velocity and obstacle creation delay
-     * @param delayMin       minimum delay time for obstacle creation
-     * @param delayMax       maximum delay time for obstacle creation
-     * @param obstacleVel    new velocity
-     */
-    private void defineObstacle(int delayMin, int delayMax, int obstacleVel) {
-        this.delayMin = delayMin;
-        this.delayMax = delayMax;
-        this.obstacleVel = obstacleVel;
     }
 
     /**
@@ -669,21 +532,14 @@ public class JJump extends JPanel implements KeyListener, Runnable {
      */
     @Override
     public void run() {
-        // game loop
         long lastTime = System.nanoTime();
         final double fps = 60.0;
         final double updateInterval = 1000000000 / fps;
-        delta = 0;
+        double delta = 0;
 
         while (running) {
             if (exited) break;
             long now = System.nanoTime();
-            /*if (now - lastTime > 1000000000) lastTime = now;
-            double updates = (now - lastTime) / updateInterval;
-            for (int i = 0; i < updates; i++) {
-                actionPerformed();
-                lastTime += updateInterval;
-            }*/
             delta += (now - lastTime)/updateInterval;
             lastTime = now;
 
@@ -691,8 +547,8 @@ public class JJump extends JPanel implements KeyListener, Runnable {
                 actionPerformed();
                 delta--;
             }
-
             repaint();
+
             try {
                 if ((lastTime - System.nanoTime() + updateInterval)/1000000 < 0) continue;
                 Thread.sleep(8 /*(long)(lastTime - System.nanoTime() + updateInterval)/1000000*/);
