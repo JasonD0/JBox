@@ -23,7 +23,7 @@ public class HomePage extends JPanel {
     private final static Color AQUA = new Color(127, 255, 212);
     private boolean mp = false;
     private JBox game;
-    private JButton jump, fly, Jfloat;
+    private JButton jump, fly, Jfloat, attack;
     private JButton exit;
 
     /**
@@ -46,12 +46,15 @@ public class HomePage extends JPanel {
         exit = createButton("Exit!", null);
         fly = createButton("Fly", null);
         Jfloat = createButton("Float", null);
-        layout.add(Box.createRigidArea(new Dimension(0, 150)));
+        attack = createButton("Attack", null);
+        layout.add(Box.createRigidArea(new Dimension(0, 100)));
         layout.add(jump);
         layout.add(Box.createRigidArea(new Dimension(0, 25)));
         layout.add(Jfloat);
         layout.add(Box.createRigidArea(new Dimension(0, 25)));
         layout.add(fly);
+        layout.add(Box.createRigidArea(new Dimension(0, 25)));
+        layout.add(attack);
         layout.add(Box.createRigidArea(new Dimension(0, 25)));
         layout.add(exit);
         add(layout);
@@ -79,13 +82,16 @@ public class HomePage extends JPanel {
                 switch (option) {
                     case "Jump":
                         initPlayers();
-                        game.setJumpOver(mp);
+                        game.setJJump(mp);
                         break;
                     case "Fly":
-                        game.setFlappy();
+                        game.setJFly();
                         break;
                     case "Float":
-                        game.setGravityShift();
+                        game.setJFloat();
+                        break;
+                    case "Attack":
+                        game.setJAttack();
                         break;
                     case "Exit!":
                         game.dispose();

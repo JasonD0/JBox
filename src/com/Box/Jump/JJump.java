@@ -61,8 +61,8 @@ public class JJump extends JPanel implements KeyListener, Runnable {
         this.game = g;
         this.multiplayer = mp;
         this.rand = new Random();
-        this.p1 = new Player(500, 50, 0, 50, 50);
-        this.p2 = (!mp) ? null : new Player(500 + jjm.OFFSET, 50, 0, 50, 50);
+        this.p1 = new Player(500, 50, 0, 0,50, 50);
+        this.p2 = (!mp) ? null : new Player(500 + jjm.OFFSET, 50, 0, 0,50, 50);
         this.jjv = new JJumpView();
         this.jjm = new JJumpModel();
         this.u = u;

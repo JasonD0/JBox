@@ -9,12 +9,13 @@ public class Player extends JLabel{
 
     private int playerLength;
     private int playerHeight;
-    private int x, y, velY;
+    private int x, y, velY, velX;
 
-    public Player(int y, int x, int velY, int height, int length) {
+    public Player(int y, int x, int velY, int velX, int height, int length) {
         this.y = y;
         this.x = x;
         this.velY = velY;
+        this.velX = velX;
         this.playerHeight = height;
         this.playerLength = length;
     }
@@ -43,11 +44,18 @@ public class Player extends JLabel{
 
     public int getVelY() { return this.velY; }
 
+    public int getVelX() { return this.velX; }
+
     public void setYOrd(int y) {
         this.y = y;
     }
 
+    public void setXOrd(int x) { this.x = x; }
+
     public void setVelY(int velY) {
         this.velY = velY;
     }
+
+    public void setVelX(int velX) { this.velX = velX; }
+
 }

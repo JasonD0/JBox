@@ -54,7 +54,7 @@ public class JFly extends JPanel implements KeyListener, Runnable {
         this.rand = new Random();
         this.jfv = new JFlyView();
         this.jfm = new JFlyModel();
-        this.p1 = new Player(250, 150, 0, 50, 50);
+        this.p1 = new Player(250, 150, 0, 0,50, 50);
         init();
     }
 

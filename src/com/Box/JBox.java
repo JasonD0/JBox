@@ -1,8 +1,10 @@
 package com.Box;
 
+import com.Box.Attack.JAttack;
 import com.Box.Fly.JFly;
 import com.Box.Float.JFloat;
 import com.Box.Jump.JJump;
+import java.awt.Color;
 import javax.swing.JFrame;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -31,7 +33,7 @@ public class JBox extends JFrame {
         setHome();
 
         pack();
-        setResizable(false);
+        //setResizable(false);
         setVisible(true);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -49,7 +51,7 @@ public class JBox extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    public void setJumpOver(boolean mp) {
+    public void setJJump(boolean mp) {
         boxLayout.removeAll();
         int height = (mp) ? 1000 : HEIGHT;
         setPreferredSize(new Dimension(LENGTH, height));
@@ -61,7 +63,7 @@ public class JBox extends JFrame {
         setContentPane(boxLayout);
     }
 
-    public void setFlappy() {
+    public void setJFly() {
         boxLayout.removeAll();
         int height = (false) ? 1000 : HEIGHT;
         setPreferredSize(new Dimension(LENGTH, height));
@@ -73,7 +75,7 @@ public class JBox extends JFrame {
         setContentPane(boxLayout);
     }
 
-    public void setGravityShift() {
+    public void setJFloat() {
         boxLayout.removeAll();
         int height = (false) ? 1000 : HEIGHT;
         setPreferredSize(new Dimension(LENGTH, height));
@@ -84,6 +86,18 @@ public class JBox extends JFrame {
         setLocationRelativeTo(null);
         setContentPane(boxLayout);
     }
+
+    public void setJAttack() {
+        boxLayout.removeAll();
+        setPreferredSize(new Dimension(LENGTH + 270, HEIGHT + 200));
+        setMaximumSize(new Dimension(LENGTH + 270, HEIGHT + 200));
+        setMinimumSize(new Dimension(LENGTH + 270, HEIGHT + 200));
+        JAttack js = new JAttack(this, u);
+        boxLayout.add(js);
+        setLocationRelativeTo(null);
+        setContentPane(boxLayout);
+    }
+
     /*
     @Override
     public void actionPerformed(ActionEvent e) {

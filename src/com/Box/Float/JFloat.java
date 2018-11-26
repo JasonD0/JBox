@@ -53,7 +53,7 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
      */
     public JFloat(JBox g, User u) {
         this.game = g;
-        this.p1 = new Player(250, 150, 0, 50, 50);
+        this.p1 = new Player(250, 150, 0, 0,50, 50);
         this.jfv = new JFloatView();
         this.jfm = new JFloatModel();
         this.rand = new Random();
