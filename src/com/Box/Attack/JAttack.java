@@ -27,8 +27,9 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
     int playerVel = 3, angleIncrease = 5;
     int flag = 0;
     Color border = Color.WHITE;
-    private boolean attack, attackLock;
+    private boolean attack, attackLock, rollBack;
     private int counter;
+    private int direction;
 
     public JAttack(JBox game, User u) {
         this.jav = new JAttackView();
@@ -42,6 +43,8 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
         this.running = false;
         this.attack = false;
         this.attackLock = false;
+        this.direction = 1;
+        this.rollBack = false;
         init();
     }
 
@@ -111,6 +114,9 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
         if (p.getYOrd() > jam.GAME_HEIGHT - p.getPlayerHeight() - 100) {
             p.setVelY(0);
             p.setYOrd(jam.GAME_HEIGHT - p.getPlayerHeight() - 100);
+            rollBack = false;
+            direction = 1;
+            p.setVelX(0);
         }
         p.setYOrd(p.getYOrd() + p.getVelY());
 
@@ -120,56 +126,72 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
         if (p.getXOrd() < 0) {
             p.setXOrd(0);
         }
-        p.setXOrd(p.getXOrd() + p.getVelX());
+        p.setXOrd(p.getXOrd() + direction*p.getVelX());
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        jav.drawPlatform(g, jam.AQUA);
-        if (!attack) jav.drawPlayer(g, p);
+        //jav.drawPlatform(g, jam.AQUA);
+        if (rollBack) rollBack(g);
+        else if (!attack) jav.drawPlayer(g, p);
         else playerAttack(g);
         jav.drawEnemy(g, e);
+        jav.drawPlatform(g, jam.AQUA);
+        jav.hideGlitch(g, jam.LIGHT_GRAY);
+        e.setColor(Color.BLACK);
     }
 
     private void playerAttack(Graphics g) {
         if (!attackLock) {
             setPlayerLastOrdinates();
+            direction = (p.getXOrd() > e.getXOrd() + e.getPlayerLength()/2) ? -1 : 1;
             attackLock = true;
         }
         boolean collided = checkCollision();
         if (p.getYOrd() <= jam.GAME_HEIGHT - 150 && !collided) {
-            e.setColor(Color.BLACK);
-            p.setYOrd(calculateY());
+            p.setYOrd(calculateY(playerPA.getLastPlayerXOrd(), playerPA.getLastEnemyXOrd() + e.getPlayerLength()/2, playerPA.getLastPlayerYOrd()));
             jav.rollAttack(g, p.getXOrd(), p.getYOrd(), angleIncrease, border);
-            int direction = (p.getXOrd() > e.getXOrd()) ? -1 : 1;
             p.setXOrd(p.getXOrd() + playerVel*direction);
             if (flag == 0 && p.getYOrd() < 255) {
-                playerVel = 4;
+                p.setVelX(4);
                 angleIncrease = 10;
                 flag = 1;
                 border = jam.AQUA;
             }
+        // player missed/hit enemy
         } else {
-            if (collided) e.setColor(Color.RED); // if collided go to ground and roll back
-            p.setXOrd(100);
-            p.setYOrd(jam.GAME_HEIGHT - 150);
+            /*p.setXOrd(playerPA.getLastPlayerXOrd());
+            p.setYOrd(playerPA.getLastPlayerYOrd());*/
             border = Color.WHITE;
-            playerVel = 3;
+            p.setVelX(0);
             angleIncrease = 5;
             flag = 0;
+            direction = 1;
             attack = false;
             attackLock = false;
+            if (collided) {
+                e.setColor(Color.RED); // if collided go to ground and roll back
+                rollBack = true;
+                p.setVelX(7);
+            }
         }
     }
 
-    private int calculateY() {
+    private int calculateY(int startX, int endX, int startY) {
         // y = a(x-h)^2 + k
-        double h = (playerPA.getLastPlayerXOrd() + playerPA.getLastEnemyXOrd())/2;
+        double h = (startX + endX)/2;
         double k = 250;
-        double a = (playerPA.getLastPlayerYOrd() - k)/Math.pow(playerPA.getLastPlayerXOrd() - h, 2);
+        double a = (startY - k)/Math.pow(startX - h, 2);
         double dY = Math.pow(p.getXOrd() - h, 2)*a + k;
         return (int) dY;
+    }
+
+    private void rollBack(Graphics g) {
+        direction = (p.getXOrd() > e.getXOrd() + e.getPlayerLength()/2) ? 1 : -1;
+        p.setYOrd(calculateY(playerPA.getLastPlayerXOrd(), playerPA.getLastEnemyXOrd() + e.getPlayerLength()/2, playerPA.getLastPlayerYOrd()));
+        jav.rollAttack(g, p.getXOrd(), p.getYOrd(), angleIncrease, border);
+        p.setXOrd(p.getXOrd() + playerVel * direction);
     }
 
     private boolean checkCollision() {
@@ -212,6 +234,7 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
      */
     @Override
     public void keyPressed(KeyEvent e) {
+        if (attack) return;
         if (e.getKeyCode() == KeyEvent.VK_UP) {
             p.setVelY(-7);
         }
@@ -232,6 +255,7 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
      */
     @Override
     public void keyReleased(KeyEvent e) {
+        if (attack) return;
         if (e.getKeyCode() == KeyEvent.VK_UP) {
             p.setVelY(12);
         }

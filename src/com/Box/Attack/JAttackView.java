@@ -1,5 +1,6 @@
 package com.Box.Attack;
 
+import com.Box.Float.JFloat;
 import com.Box.Player;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -36,6 +37,7 @@ public class JAttackView {
     public void drawPlayer(Graphics g, Player p) {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setColor(Color.WHITE);
+        g2d.rotate(0);
         Rectangle player = new Rectangle(p.getXOrd(), p.getYOrd(), p.getPlayerLength(), p.getPlayerHeight());
         g2d.fill(player);
         g2d.dispose();
@@ -55,8 +57,15 @@ public class JAttackView {
     public void drawPlatform(Graphics g, Color c) {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setColor(c);
-        platform = new Rectangle(0, 600, 1250, 20);
+        platform = new Rectangle(0, 600, 1255, 20);
         g2d.fill(platform);
+        g2d.dispose();
+    }
+
+    public void hideGlitch(Graphics g, Color c) {
+        Graphics2D g2d = (Graphics2D) g.create();
+        g2d.setColor(c);
+        g2d.fillRect(0, 620, 1255, 80);
         g2d.dispose();
     }
 }
