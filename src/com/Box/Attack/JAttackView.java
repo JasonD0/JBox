@@ -34,6 +34,15 @@ public class JAttackView {
         g2d.dispose();
     }
 
+    public void curvedJump(Graphics g, Player p, int angle) {
+        Graphics2D g2d = (Graphics2D) g.create();
+        g2d.setColor(Color.WHITE);
+        Rectangle player = new Rectangle(p.getXOrd(), p.getYOrd(), p.getPlayerLength(), p.getPlayerHeight());
+        g2d.rotate(Math.toRadians(angle), p.getXOrd() + p.getPlayerLength()/2, p.getYOrd() + p.getPlayerHeight()/2);
+        g2d.fill(player);
+        g2d.dispose();
+    }
+
     public void drawPlayer(Graphics g, Player p) {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setColor(Color.WHITE);
