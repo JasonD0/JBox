@@ -1,7 +1,6 @@
 package com.Box.Attack;
 
 import com.Box.JBox;
-import com.Box.Player;
 import com.Box.User;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -18,38 +17,30 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
     private JAttackView jav;
     private JAttackModel jam;
     private PreAttack playerPA, enemyPA;
-    private Player p;
+    private JAttackPlayer p;
     private Enemy e;
     private User u;
     private JBox g;
     private boolean running;
     private Thread t;
-    int playerVel = 3, angleIncrease = 5;
-    int flag = 0;
-    Color border = Color.WHITE;
-    private boolean attack, attackLock, rollBack, jumped;
     private int counter;
-    private int direction;
-    private boolean curvedJump;
-    private int angle;
-    private String lastXMove;
+    private boolean attack, attackLock;
+    private boolean curvedJump, fallBack, jumped;
 
     public JAttack(JBox game, User u) {
         this.jav = new JAttackView();
         this.jam = new JAttackModel();
         this.playerPA = new PreAttack();
         this.enemyPA = new PreAttack();
-        this.p = new Player(jam.GAME_HEIGHT - 150, 100, 0, 0,50, 50);
-        this.e = new Enemy(jam.GAME_HEIGHT - 150 - 150, 700, 0, 0, 200, 200);
+        this.p = new JAttackPlayer(jam.GAME_HEIGHT - 100 - 50, 100, 0, 0,50, 50);
+        this.e = new Enemy(jam.GAME_HEIGHT - 100 - 200, 700, 0, 0, 200, 200);
         this.g = game;
         this.u = u;
         this.running = false;
         this.attack = false;
         this.attackLock = false;
-        this.direction = 1;
-        this.rollBack = false;
+        this.fallBack = false;
         this.jumped = false;
-        this.angle = 10;
         init();
     }
 
@@ -117,108 +108,119 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
 
     private void movePlayer() {
         // checkCollision && curvedJumped   rollBack = true;
+
+        // enemy in the air and jumpUp
         if (checkCollision() && jumped) {
             p.setVelY(20);
             p.setVelX(0);
             jumped = false;
         }
+        // jumping peak
         else if (p.getYOrd() <= 250 && jumped) {
             p.setVelY(15);
         }
 
-        if (p.getYOrd() > jam.GAME_HEIGHT - p.getPlayerHeight() - 100) {
-            if (curvedJump) {
-                curvedJump = false;
-                angle = 0;
-            }
-            p.setVelY(0);
-            p.setYOrd(jam.GAME_HEIGHT - p.getPlayerHeight() - 100);
-            rollBack = false;
-            direction = 1;
-            p.setVelX(0);
-        }
-        p.setYOrd(p.getYOrd() + p.getVelY());
+        preventMoveBelow();
+        preventMoveOutRight();
+        preventMoveOutLeft();
 
-        if (p.getXOrd() + p.getPlayerLength() > jam.GAME_LENGTH) {
-            if (curvedJump) {
-                curvedJump = false;
-                angle = 0;
-                p.setVelY(7);
-                p.setVelX(-3);
-            }
-            p.setXOrd(jam.GAME_LENGTH - p.getPlayerLength());
-            if (rollBack) p.setVelY(7);
-            rollBack = false;
-            direction = 1;
-        }
-        if (p.getXOrd() < 0) {
-            if (curvedJump) {
-                curvedJump = false;
-                angle = 0;
-                p.setVelY(7);
-            }
-            p.setXOrd(0);
-            if (rollBack) p.setVelY(-7);
-            rollBack = false;
-            direction = 1;
-        }
-        p.setXOrd(p.getXOrd() + direction*p.getVelX());
+        p.setYOrd(p.getYOrd() + p.getVelY());
+        p.setXOrd(p.getXOrd() + p.getVelX());
+    }
+
+    // prevent player from moving below platform
+    private void preventMoveBelow() {
+        if (p.getYOrd() <= jam.GAME_HEIGHT - p.getPlayerHeight() - 100) return;
+        jumped = false;
+        fallBack = false;
+        curvedJump = false;
+        p.setVelY(0);
+        p.setVelX(0);
+        p.setYOrd(jam.GAME_HEIGHT - p.getPlayerHeight() - 100);
+    }
+
+    // prevent player from moving outside the right of the window
+    private void preventMoveOutRight() {
+        if (p.getXOrd() + p.getPlayerLength() <= jam.GAME_LENGTH) return;
+        if (curvedJump) curveJumpAgainstWall(-1);
+        if (fallBack) fallBackAgainstWall(1);
+        p.setXOrd(jam.GAME_LENGTH - p.getPlayerLength());
+    }
+
+    // prevent player from moving outside the left of the window
+    private void preventMoveOutLeft() {
+        if (p.getXOrd() >= 0) return;
+        if (curvedJump) curveJumpAgainstWall(1);
+        if (fallBack) fallBackAgainstWall(-1);
+        p.setXOrd(0);
+    }
+
+    private void curveJumpAgainstWall(int direction) {
+        curvedJump = false;
+        p.setVelY(10);
+        p.setVelX(direction*5);
+    }
+
+    private void fallBackAgainstWall(int direction) {
+        p.setVelY(7*direction);
+        fallBack = false;
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (rollBack && !attackLock) fallBack(g);
+        if (fallBack && !attackLock) fallBack(g);
         else if (curvedJump) curvedJump(g);
         else if (!attack) jav.drawPlayer(g, p);
         else playerAttack(g);
         jav.drawEnemy(g, e);
-        jav.drawPlatform(g, jam.AQUA);
+        jav.drawPlatform(g, jam.PLATFORM_YORD, jam.AQUA);
         jav.hideGlitch(g, jam.LIGHT_GRAY);
         e.setColor(Color.BLACK);
     }
 
     private void playerAttack(Graphics g) {
-        if (!attackLock) {
-            setPlayerLastOrdinates();
-            direction = (p.getXOrd() > e.getXOrd() + e.getPlayerLength()/2) ? -1 : 1;
-            attackLock = true;
-            p.setVelX(3);
-        }
+        playerAttackSetUp();
         boolean collided = checkCollision();
-        if (p.getYOrd() <= jam.GAME_HEIGHT - 150 && !collided) {
-            p.setYOrd(calculateY(playerPA.getLastPlayerXOrd(), playerPA.getLastEnemyXOrd() + e.getPlayerLength()/2, playerPA.getLastPlayerYOrd(), 250));
-            jav.rollAttack(g, p.getXOrd(), p.getYOrd(), angleIncrease, border);
-            p.setXOrd(p.getXOrd() + p.getVelX()*direction);
-            if (flag == 0 && p.getYOrd() < 255) {
-                p.setVelX(4);
-                angleIncrease = 7;
-                flag = 1;
-                border = jam.AQUA;
-            }
-        // player missed/hit enemy
-        } else {
-            border = Color.WHITE;
-            p.setVelX(0);
-            angleIncrease = 5;
-            flag = 0;
-            direction = 1;
-            attack = false;
-            attackLock = false;
-            if (collided) {
-                e.setColor(Color.RED);
-                rollBack = true;
-                p.setVelX(5);
-            }
+        if (p.getYOrd() <= jam.GAME_HEIGHT - 150 && !collided) performPlayerAttack(g);
+        else playerAttackFinish(collided); // player missed/hit enemy
+    }
+
+    private void playerAttackSetUp() {
+        if (attackLock) return;
+        setPlayerLastOrdinates();
+        int direction = (p.getXOrd() > e.getXOrd() + e.getPlayerLength()/2) ? -1 : 1;
+        p.setVelX(direction*p.getSpeedX());
+        attackLock = true;
+    }
+
+    private void performPlayerAttack(Graphics g) {
+        int startX = playerPA.getLastPlayerXOrd();
+        int endX = playerPA.getLastEnemyXOrd() + e.getPlayerLength()/2;
+        p.setYOrd(calculateY(startX, endX, playerPA.getLastPlayerYOrd(), 250));
+        jav.rollAttack(g, p);
+        p.setAngle((p.getAngle() + 5) % 360);
+    }
+
+    private void playerAttackFinish(boolean collided) {
+        attackLock = false;
+        attack = false;
+        p.setVelX(0);
+        if (collided) {
+            e.setColor(Color.RED);
+            fallBack = true;
+            p.setSpeedX(10);
         }
     }
 
     private void curvedJump(Graphics g) {
-        direction = (this.lastXMove != null && this.lastXMove.compareTo("left") == 0) ? -1 : 1;
-        p.setYOrd(calculateY(playerPA.getLastPlayerXOrd(), playerPA.getLastPlayerXOrd() + direction*500, playerPA.getLastPlayerYOrd(), 200));
-        jav.curvedJump(g, p, angle);
-        p.setXOrd(p.getXOrd() + p.getVelX()*direction);
-        angle = (angle + 10) % 360;
+        int direction = (p.getLastXMove().compareTo("left") == 0) ? -1 : 1;
+        int startX = playerPA.getLastPlayerXOrd();
+        int endX = playerPA.getLastPlayerXOrd() + direction*500;
+        p.setYOrd(calculateY(startX, endX, playerPA.getLastPlayerYOrd(), 200));
+        jav.curvedJump(g, p);
+        p.setAngle((p.getAngle() + 5) % 360);
+        p.setVelX(p.getSpeedX()*direction);
     }
 
     private int calculateY(int startX, int endX, int startY, int vertexH) {
@@ -231,15 +233,17 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
     }
 
     private void fallBack(Graphics g) {
-        direction = (p.getXOrd() > e.getXOrd() + e.getPlayerLength()/2) ? 1 : -1;
-        p.setYOrd(calculateY(playerPA.getLastEnemyXOrd() + e.getPlayerLength() / 2 + direction * 400, playerPA.getLastEnemyXOrd() + e.getPlayerLength() / 2, playerPA.getLastPlayerYOrd(), 250));
-        jav.rollAttack(g, p.getXOrd(), p.getYOrd(), angleIncrease, border);
-        p.setXOrd(p.getXOrd() + playerVel * direction);
+        int direction = (p.getXOrd() > e.getXOrd() + e.getPlayerLength()/2) ? 1 : -1;
+        int startX = playerPA.getLastEnemyXOrd() + e.getPlayerLength() / 2 + direction * 400;
+        int endX = playerPA.getLastEnemyXOrd() + e.getPlayerLength() / 2;
+        p.setYOrd(calculateY(startX, endX, playerPA.getLastPlayerYOrd(), 250));
+        jav.rollAttack(g, p);
+        p.setAngle((p.getAngle() + 5) % 360);
+        p.setVelX(p.getSpeedX()*direction);
     }
 
     private void jumpUpAttack() {
         jumped = true;
-        direction = 0;
         p.setVelY(-17);
         p.setVelX(0);
     }
@@ -284,23 +288,28 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
      */
     @Override
     public void keyPressed(KeyEvent e) {
-        if (attack || rollBack || curvedJump) return;
+        if (attack || fallBack || curvedJump) return;
+        if (p.getYOrd() + p.getPlayerHeight() != jam.PLATFORM_YORD) return; // player not on platform
+
         if (e.getKeyCode() == KeyEvent.VK_UP && p.getVelX() == 0 && p.getVelY() == 0) {
             p.setVelY(-12);
             jumped = true;
         }
-        if (e.getKeyCode() == KeyEvent.VK_LEFT && p.getVelY() == 0) {
-            p.setVelX(-7);
-            this.lastXMove = "left";
-        }
-        if (e.getKeyCode() == KeyEvent.VK_RIGHT && p.getVelY() == 0) {
+
+        if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
             p.setVelX(7);
-            this.lastXMove = "right";
+            p.setLastXMove("right");
         }
-        if (e.getKeyCode() == KeyEvent.VK_SPACE && p.getVelY() == 0) {
+
+        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+            p.setVelX(-7);
+            p.setLastXMove("left");
+        }
+
+        if (e.getKeyCode() == KeyEvent.VK_SPACE) {
             curvedJump = true;
             setPlayerLastOrdinates();
-            p.setVelX(3);
+            p.setSpeedX(7);
         }
     }
 
@@ -313,30 +322,32 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
      */
     @Override
     public void keyReleased(KeyEvent e) {
-        if (attack || rollBack || curvedJump) return;
-        if (e.getKeyCode() == KeyEvent.VK_UP && p.getVelY() == 0) {
+        if (attack || fallBack || curvedJump) return;
+        if (p.getYOrd() + p.getPlayerHeight() != jam.PLATFORM_YORD) return; // player not on platform
+
+        if (e.getKeyCode() == KeyEvent.VK_UP && p.getVelY() == 0 && p.getVelX() == 0) {
             p.setVelY(-12);
             jumped = true;
         }
-        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-            p.setVelX(0);
-            this.lastXMove = "left";
-        }
+
         if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
             p.setVelX(0);
-            this.lastXMove = "right";
+            p.setLastXMove("right");
         }
-        if (e.getKeyCode() == KeyEvent.VK_A && p.getVelY() == 0) {
-            if (p.getXOrd() + p.getPlayerLength() > this.e.getXOrd() && p.getXOrd() < this.e.getXOrd() + this.e.getPlayerLength()) jumpUpAttack();
-            else {
+
+        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+            p.setVelX(0);
+            p.setLastXMove("left");
+        }
+
+        if (e.getKeyCode() == KeyEvent.VK_A) {
+            if (p.getXOrd() + p.getPlayerLength() > this.e.getXOrd() &&
+                    p.getXOrd() < this.e.getXOrd() + this.e.getPlayerLength()) {
+                jumpUpAttack();
+            } else {
                 attack = true;
-                //this.e.setYOrd(100);
+                p.setSpeedX(7);
             }
-        }
-        if (e.getKeyCode() == KeyEvent.VK_SPACE && p.getVelY() == 0) {
-            curvedJump = true;
-            setPlayerLastOrdinates();
-            p.setVelX(3);
         }
     }
 

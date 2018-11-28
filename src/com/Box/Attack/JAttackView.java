@@ -1,44 +1,27 @@
 package com.Box.Attack;
 
-import com.Box.Float.JFloat;
 import com.Box.Player;
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
 
 public class JAttackView {
-    private int angle;
-    private Rectangle platform, player, enemy;
-    public JAttackView() {
-        this.angle = 10;
-    }
-
-    public void rollAttack(Graphics g, int x, int y, int angleIncrease, Color border) {
+    public void rollAttack(Graphics g, JAttackPlayer p) {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setColor(Color.WHITE);
-        Rectangle player = new Rectangle(x, y, 50, 50);
-        g2d.rotate(Math.toRadians(angle), x + 50/2, y + 50/2);
-        this.angle = (this.angle + angleIncrease) % 360;
-        //g2d.draw(player);
+        Rectangle player = new Rectangle(p.getXOrd(), p.getYOrd(), 50, 50);
+        g2d.rotate(Math.toRadians(p.getAngle()), p.getXOrd() + p.getPlayerLength()/2, p.getYOrd() + p.getPlayerHeight()/2);
         g2d.fill(player);
-        if (angleIncrease > 5) {
-            g2d.setColor(border);
-            g2d.drawRect(x, y, 50, 50);
-        }
         g2d.dispose();
     }
 
-    public void curvedJump(Graphics g, Player p, int angle) {
+    public void curvedJump(Graphics g, JAttackPlayer p) {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setColor(Color.WHITE);
         Rectangle player = new Rectangle(p.getXOrd(), p.getYOrd(), p.getPlayerLength(), p.getPlayerHeight());
-        g2d.rotate(Math.toRadians(angle), p.getXOrd() + p.getPlayerLength()/2, p.getYOrd() + p.getPlayerHeight()/2);
+        g2d.rotate(Math.toRadians(p.getAngle()), p.getXOrd() + p.getPlayerLength()/2, p.getYOrd() + p.getPlayerHeight()/2);
         g2d.fill(player);
         g2d.dispose();
     }
@@ -63,10 +46,10 @@ public class JAttackView {
         g2d.dispose();
     }
 
-    public void drawPlatform(Graphics g, Color c) {
+    public void drawPlatform(Graphics g, int y, Color c) {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setColor(c);
-        platform = new Rectangle(0, 600, 1255, 20);
+        Rectangle platform = new Rectangle(0, y, 1255, 20);
         g2d.fill(platform);
         g2d.dispose();
     }
