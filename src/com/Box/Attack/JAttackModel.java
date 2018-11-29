@@ -9,4 +9,33 @@ public class JAttackModel {
     public final static int GAME_LENGTH = 1250;
     public final static int GAME_HEIGHT = 700;
     public final static int PLATFORM_YORD = 600;
+    public final static int JUMP = 1;
+    public final static int TRIPLE_JUMP = 2;
+    public final static int RAIN = 3;
+    public final static int ROLL = 4;
+    private JAttackPlayer p;
+    private Enemy e;
+    private int counter;
+
+    public JAttackModel(JAttackPlayer p, Enemy e) {
+        this.p = p;
+        this.e = e;
+        this.counter = 0;
+    }
+
+    public int getCounter() {
+        return this.counter;
+    }
+
+    public void updateCounter() {
+        this.counter++;
+    }
+
+    public JAttackPlayer getPlayer() {
+        return this.p;
+    }
+
+    public Enemy getEnemy() {
+        return this.e;
+    }
 }

@@ -33,7 +33,7 @@ public class JBox extends JFrame {
         setHome();
 
         pack();
-        //setResizable(false);
+        setResizable(false);
         setVisible(true);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

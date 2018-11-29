@@ -5,13 +5,16 @@ import com.Box.Player;
 public class JAttackPlayer extends Player {
     private int angle;
     private String lastXMove;
+    private String status;
     private int speedX;
+    private int stunnedStart;
 
     public JAttackPlayer(int y, int x, int velY, int velX, int height, int length) {
         super(y, x, velY, velX, height, length);
-        this.angle = 10;
+        this.angle = 0;
         this.lastXMove = "right";
         this.speedX = 7;
+        this.status = "";
     }
 
     public void setAngle(int angle) {
@@ -37,4 +40,21 @@ public class JAttackPlayer extends Player {
     public void setSpeedX(int v) {
         this.speedX = v;
     }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getStatus() {
+        return this.status;
+    }
+
+    public int getStunnedStart() {
+        return this.stunnedStart;
+    }
+
+    public void setStunnedStart(int counter) {
+        this.stunnedStart = counter;
+    }
 }
+
