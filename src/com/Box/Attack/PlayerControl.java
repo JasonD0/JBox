@@ -45,8 +45,8 @@ public class PlayerControl {
         // collide with enemy  not during the player attack
         else if (collision && !fallBack && !knockBack && !attack) {
             int direction = (p.getXOrd() + p.getPlayerLength() < e.getXOrd() + e.getPlayerLength()/2) ? -1 : 1;
-            if (p.getXOrd() == 0) direction = 1;
-            if (p.getXOrd() + p.getPlayerLength() == jam.GAME_LENGTH) direction = -1;
+            //if (p.getXOrd() == 0) direction = 1;
+            //if (p.getXOrd() + p.getPlayerLength() == jam.GAME_LENGTH) direction = -1;
             p.setVelX(20*direction);
             p.setVelY(0);
             knockBack = true;
@@ -125,8 +125,8 @@ public class PlayerControl {
         if (attackLock) return;
         setPlayerLastOrdinates();
         int direction = (p.getXOrd() > e.getXOrd() + e.getPlayerLength()/2) ? -1 : 1;
-        if (p.getXOrd() == 0) direction = 1;
-        if (p.getXOrd() + p.getPlayerLength() == jam.GAME_LENGTH) direction = -1;
+        //if (p.getXOrd() == 0) direction = 1;
+        //if (p.getXOrd() + p.getPlayerLength() == jam.GAME_LENGTH) direction = -1;
         p.setVelX(direction*p.getSpeedX());
         attackLock = true;
     }
@@ -147,8 +147,8 @@ public class PlayerControl {
         if (collided) {
             if (e.getAttacking()) {
                 int direction = (p.getXOrd() + p.getPlayerLength() < e.getXOrd() + e.getPlayerLength()/2) ? -1 : 1;
-                if (p.getXOrd() == 0) direction = 1;
-                if (p.getXOrd() + p.getPlayerLength() == jam.GAME_LENGTH) direction = -1;
+               // if (p.getXOrd() == 0) direction = 1;
+                //if (p.getXOrd() + p.getPlayerLength() == jam.GAME_LENGTH) direction = -1;
                 p.setVelX(20*direction);
                 p.setVelY(0);
                 knockBack = true;

@@ -12,6 +12,7 @@ public class EnemyControl {
     private Random rand;
     private int currentAttack;
     private boolean falling, collidedMidAir;
+    private boolean fallBack, fallDownWall;
 
     public EnemyControl(JAttackModel jam, JAttackView jav) {
         this.enemyPA = new PreAttack();
@@ -23,6 +24,8 @@ public class EnemyControl {
         this.rand = new Random();
         this.falling = false;
         this.collidedMidAir = false;
+        this.fallBack = false;
+        this.fallDownWall = false;
     }
 
     public void setEnemyLastOrdinates() {
@@ -33,6 +36,7 @@ public class EnemyControl {
     }
 
     private void jumpAttack(int direction) {
+        if (fallBack) fallBack();
         if (falling || collidedMidAir) return;
         e.setColor(Color.BLACK);
         int maxHeight = 50;
@@ -58,16 +62,19 @@ public class EnemyControl {
     }
 
     private void rollAttack(int direction) {
-        e.setVelX(direction*5);
-        e.setRotationAngle((e.getRotationAngle() + 10) % 360);
+        if (fallBack) fallBack();
+        else {
+            e.setVelX(direction * 5);
+            e.setRotationAngle((e.getRotationAngle() + 10) % 360);
+        }
     }
 
     public void moveEnemy(boolean collision) {
         if (e.getStatus().compareTo("") != 0) return;
         currentAttack = (currentAttack == 0) ? chooseAttack() : currentAttack;
         performAttack();
-        if (currentAttack == jam.ROLL) checkRollAttackEnd(collision);
-        if (currentAttack == jam.JUMP) checkJumpAttackEnd(collision);
+        if (currentAttack == jam.ROLL) checkRollAttackCollision(collision);
+        if (currentAttack == jam.JUMP) checkJumpAttackCollision(collision);
         preventMoveBelow();
         preventMoveOutLeft();
         preventMoveOutRight();
@@ -78,35 +85,51 @@ public class EnemyControl {
 
     private void performAttack() {
         if (e.getStatus().compareTo("CHARGING...") == 0 || e.getStatus().compareTo("STUNNED") == 0) return;
-        if (!e.getAttacking()) {
-            System.out.println(p.getXOrd());
-            setEnemyLastOrdinates();
-        }
+        if (!e.getAttacking()) setEnemyLastOrdinates();
         int direction = (enemyPA.getLastEnemyXOrd() + e.getPlayerLength()/2 < enemyPA.getLastPlayerXOrd()) ? 1 : -1;
         if (currentAttack == jam.JUMP) jumpAttack(direction);
-            //else if (currentAttack == jam.TRIPLE_JUMP);
+        //else if (currentAttack == jam.TRIPLE_JUMP);
         else if (currentAttack == jam.ROLL) rollAttack(direction);
         /*else if (currentAttack == jam.RAIN);*/
         e.setAttacking(true);
     }
 
-    private void checkRollAttackEnd(boolean collided) {
-        if (!collided) return;
-        // hit player
-        int direction = (enemyPA.getLastEnemyXOrd() + e.getPlayerLength()/2 < enemyPA.getLastPlayerXOrd()) ? -1 : 1;
-        e.setXOrd(e.getXOrd() + direction*200);
+    private void checkRollAttackCollision(boolean collided) {
+        if (!collided || fallBack) return;
+        e.setVelY(0);
         e.setVelX(0);
-        e.setRotationAngle(0);
-        currentAttack = 0;
-        e.setAttacking(false);
+        setEnemyLastOrdinates();
+        fallBack = true;
     }
 
-    private void checkJumpAttackEnd(boolean collided) {
-        if (!collided) return;
+    private void checkJumpAttackCollision(boolean collided) {
+        if (!collided || fallBack) return;
         collidedMidAir = true;
         falling = false;
         e.setVelX(0);
-        e.setVelY(30);
+        //e.setVelY(30);
+        e.setVelY(0);
+        setEnemyLastOrdinates();
+        fallBack = true;
+    }
+
+    private void fallBack() {
+        if (fallDownWall) return;
+        int direction = (enemyPA.getLastPlayerXOrd() + p.getPlayerLength()/2 < enemyPA.getLastEnemyXOrd() + e.getPlayerLength()/2) ? 1 : -1;
+        int startX = enemyPA.getLastEnemyXOrd() + e.getPlayerLength() / 2 + direction * 400;
+        int endX = enemyPA.getLastEnemyXOrd() + e.getPlayerLength()/2;
+        e.setVelX(10*direction);
+        e.setYOrd(calculateY(startX, endX, enemyPA.getLastEnemyYOrd(), enemyPA.getLastEnemyYOrd() - 250));
+        e.setRotationAngle((e.getRotationAngle() + 5) % 360);
+    }
+
+    private int calculateY(int startX, int endX, int startY, int vertexH) {
+        // y = a(x-h)^2 + k
+        double h = (startX + endX)/2;
+        double k = vertexH;
+        double a = (startY - k)/Math.pow(startX - h, 2);
+        double dY = Math.pow(e.getXOrd() + e.getPlayerLength()/2 - h, 2)*a + k;
+        return (int) dY;
     }
 
     private void preventMoveBelow() {
@@ -123,6 +146,12 @@ public class EnemyControl {
             collidedMidAir = false;
             e.setAttacking(false);
         }
+        if (fallBack) {
+            e.setAttacking(false);
+            currentAttack = 0;
+            fallBack = false;
+            fallDownWall = false;
+        }
         e.setRotationAngle(0);
         e.setVelY(0);
         e.setVelX(0);
@@ -136,7 +165,12 @@ public class EnemyControl {
             falling = true;
             e.setAttacking(false);
         }
-        if (currentAttack == jam.ROLL) {
+        if (fallBack) {
+            //e.setAttacking(false);
+            fallDownWall = true;
+            e.setVelY(20);
+        }
+        else if (currentAttack == jam.ROLL) {
             e.setStatus("STUNNED");
             e.setStunnedStart(jam.getCounter());
             e.setAttacking(false);
@@ -154,7 +188,11 @@ public class EnemyControl {
             falling = true;
             e.setAttacking(false);
         }
-        if (currentAttack == jam.ROLL) {
+        if (fallBack) {
+            fallDownWall = true;
+            e.setVelY(20);
+        }
+        else if (currentAttack == jam.ROLL) {
             e.setStatus("STUNNED");
             e.setStunnedStart(jam.getCounter());
             e.setAttacking(false);
@@ -167,7 +205,7 @@ public class EnemyControl {
 
     private int chooseAttack() {
         if (e.getStatus().compareTo("") != 0) return 0;
-        int prob = rand.nextInt(100) + 1;
+     /*   int prob = rand.nextInt(100) + 1;
         // if prob == 23 || 1   jump for 10 seconds
         //if (prob > 0 && prob < 13) return jam.TRIPLE_JUMP;
         if (prob >= 13 && prob < 54) {
@@ -177,9 +215,11 @@ public class EnemyControl {
         if (prob >= 55 && prob < 97) {
             setUpRollAttack();
             return jam.ROLL;
-        }
-        setUpRollAttack();
-        return jam.ROLL;
+        }*/
+       // setUpRollAttack();
+        //return jam.ROLL;
+        setUpJumpAttack();
+        return jam.JUMP;
     }
 
     private void setUpJumpAttack() {
