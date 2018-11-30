@@ -40,7 +40,7 @@ public class JAttackView {
         g2d.fill(e);
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font(null, Font.BOLD, 15));
-        g2d.drawString(enemy.getStatus(), enemy.getXOrd()  /*+ enemy.getPlayerLength()/3 */,enemy.getYOrd() - 10);
+        g2d.drawString(enemy.getStatus(), enemy.getXOrd(),enemy.getYOrd() - 10);
         g2d.dispose();
     }
 

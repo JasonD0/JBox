@@ -84,11 +84,10 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
         requestFocusInWindow();
         if (p.getStatus().compareTo("STUNNED") == 0 && jam.getCounter() - p.getStunnedStart() == 2) p.setStatus("");
         if (e.getStatus().compareTo("STUNNED") == 0 && jam.getCounter() - e.getStunnedStart() == 2) e.setStatus("");
+        if (e.getStatus().compareTo("CHARGING...") == 0 && jam.getCounter() - e.getStunnedStart() == 3) e.setStatus("");
         boolean collided = checkCollision();
         pc.movePlayer(collided);
         ec.moveEnemy(collided);
-       // ec.checkRollAttackEnd(collided);
-        //if (e.getXOrd() <= p.getXOrd() + p.getPlayerLength()) e.setXOrd(p.getXOrd() + p.getPlayerLength() + 200);
     }
 
     @Override
@@ -96,10 +95,10 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
         super.paintComponent(g);
         boolean collided = checkCollision();
         pc.playerAction(g, collided);
-        ec.enemyAction(g, collided);
+        //ec.enemyAction(g, collided);
+        jav.drawEnemy(g, e);
         jav.drawPlatform(g, jam.PLATFORM_YORD, jam.AQUA);
         jav.hideGlitch(g, jam.LIGHT_GRAY);
-        e.setColor(Color.BLACK);
     }
 
 

@@ -8,12 +8,14 @@ public class Enemy extends Player {
     private Color c;
     private String status;
     private int stunnedStart;
+    private boolean attacking;
 
     public Enemy(int y, int x, int velY, int velX, int height, int length) {
         super(y, x, velY, velX, height, length);
         this.c = Color.BLACK;
         this.status = "";
         this.rotationAngle = 0;
+        this.attacking = false;
     }
 
     public Color getColor() {
@@ -46,5 +48,13 @@ public class Enemy extends Player {
 
     public void setStunnedStart(int counter) {
         this.stunnedStart = counter;
+    }
+
+    public void setAttacking(boolean attacking) {
+        this.attacking = attacking;
+    }
+
+    public boolean getAttacking() {
+        return this.attacking;
     }
 }

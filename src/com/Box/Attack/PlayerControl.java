@@ -51,7 +51,6 @@ public class PlayerControl {
             p.setVelY(0);
             knockBack = true;
         }
-
         // ABOVE  COLLISION DETECTION (another function  execute before movePlayer())
 
         preventMoveBelow();
@@ -79,7 +78,7 @@ public class PlayerControl {
     private void preventMoveOutRight() {
         if (p.getXOrd() + p.getPlayerLength() <= jam.GAME_LENGTH) return;
         if (curvedJump) curveJumpAgainstWall(-1);
-        if (fallBack) fallBackAgainstWall(1);
+        if (fallBack) fallBackAgainstWall();
         if (knockBack) knockBackAgainstWall();
         p.setAngle(0);
         p.setVelX(0);
@@ -90,7 +89,7 @@ public class PlayerControl {
     private void preventMoveOutLeft() {
         if (p.getXOrd() >= 0) return;
         if (curvedJump) curveJumpAgainstWall(1);
-        if (fallBack) fallBackAgainstWall(-1);
+        if (fallBack) fallBackAgainstWall();
         if (knockBack) knockBackAgainstWall();
         p.setAngle(0);
         p.setVelX(0);
@@ -103,9 +102,9 @@ public class PlayerControl {
         p.setVelX(direction*5);
     }
 
-    private void fallBackAgainstWall(int direction) {
+    private void fallBackAgainstWall() {
         fallBack = false;
-        p.setVelY(7*direction);
+        p.setVelY(7);
     }
 
     private void knockBackAgainstWall() {
@@ -146,9 +145,18 @@ public class PlayerControl {
         p.setAngle(0);
         p.setVelX(0);
         if (collided) {
-            e.setColor(Color.RED);
-            fallBack = true;
-            p.setSpeedX(10);
+            if (e.getAttacking()) {
+                int direction = (p.getXOrd() + p.getPlayerLength() < e.getXOrd() + e.getPlayerLength()/2) ? -1 : 1;
+                if (p.getXOrd() == 0) direction = 1;
+                if (p.getXOrd() + p.getPlayerLength() == jam.GAME_LENGTH) direction = -1;
+                p.setVelX(20*direction);
+                p.setVelY(0);
+                knockBack = true;
+            } else {
+                //e.setColor(Color.RED);
+                fallBack = true;
+                p.setSpeedX(10);
+            }
         }
     }
 
