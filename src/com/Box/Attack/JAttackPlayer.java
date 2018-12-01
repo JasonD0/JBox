@@ -8,6 +8,7 @@ public class JAttackPlayer extends Player {
     private String status;
     private int speedX;
     private int stunnedStart;
+    private int health;
 
     public JAttackPlayer(int y, int x, int velY, int velX, int height, int length) {
         super(y, x, velY, velX, height, length);
@@ -15,6 +16,7 @@ public class JAttackPlayer extends Player {
         this.lastXMove = "right";
         this.speedX = 7;
         this.status = "";
+        this.health = 100;
     }
 
     public void setAngle(int angle) {
@@ -55,6 +57,14 @@ public class JAttackPlayer extends Player {
 
     public void setStunnedStart(int counter) {
         this.stunnedStart = counter;
+    }
+
+    public int getHealth() {
+        return this.health;
+    }
+
+    public void setHealth(int health) {
+        this.health = health;
     }
 }
 

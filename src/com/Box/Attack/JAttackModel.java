@@ -13,6 +13,7 @@ public class JAttackModel {
     public final static int TRIPLE_JUMP = 2;
     public final static int RAIN = 3;
     public final static int ROLL = 4;
+    public final static int HIGH_JUMP = 5;
     private JAttackPlayer p;
     private Enemy e;
     private int counter;
@@ -28,7 +29,7 @@ public class JAttackModel {
     }
 
     public void updateCounter() {
-        this.counter++;
+        this.counter ++;
     }
 
     public JAttackPlayer getPlayer() {

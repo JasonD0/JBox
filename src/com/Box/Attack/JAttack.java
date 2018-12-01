@@ -71,7 +71,7 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
     }
 
     private void initGameTimer() {
-        gameTimer = new Timer(1000, new ActionListener() {
+        gameTimer = new Timer(500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //System.out.println(counter);
@@ -83,7 +83,7 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
     private void actionPerformed() {
         requestFocusInWindow();
         if (p.getStatus().compareTo("STUNNED") == 0 && jam.getCounter() - p.getStunnedStart() == 2) p.setStatus("");
-        if (e.getStatus().compareTo("STUNNED") == 0 && jam.getCounter() - e.getStunnedStart() == 2) e.setStatus("");
+        if (e.getStatus().compareTo("STUNNED") == 0 && jam.getCounter() - e.getStunnedStart() == 4) e.setStatus("");
         if (e.getStatus().compareTo("CHARGING...") == 0 && jam.getCounter() - e.getStunnedStart() == 3) e.setStatus("");
         boolean collided = checkCollision();
         pc.movePlayer(collided);

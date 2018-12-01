@@ -8,6 +8,7 @@ public class Enemy extends Player {
     private Color c;
     private String status;
     private int stunnedStart;
+    private int health;
     private boolean attacking;
 
     public Enemy(int y, int x, int velY, int velX, int height, int length) {
@@ -16,6 +17,7 @@ public class Enemy extends Player {
         this.status = "";
         this.rotationAngle = 0;
         this.attacking = false;
+        this.health = 100;
     }
 
     public Color getColor() {
@@ -56,5 +58,13 @@ public class Enemy extends Player {
 
     public boolean getAttacking() {
         return this.attacking;
+    }
+
+    public int getHealth() {
+        return this.health;
+    }
+
+    public void setHealth(int health) {
+        this.health = health;
     }
 }

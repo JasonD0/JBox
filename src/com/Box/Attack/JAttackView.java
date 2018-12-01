@@ -28,7 +28,19 @@ public class JAttackView {
         g2d.fill(player);
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font(null, Font.BOLD, 10));
-        g2d.drawString(p.getStatus(), p.getXOrd(), p.getYOrd() - 10);
+        g2d.drawString(p.getStatus(), p.getXOrd(), p.getYOrd() - 15);
+        if (p.getAngle() == 0) {
+            double percentHealth = (double)p.getHealth()/100;
+            double redBarWidth = p.getPlayerLength() * percentHealth;
+            int redBarXOrd = p.getXOrd() + (int) redBarWidth;
+            int grayBarLength = p.getPlayerLength() - (int) redBarWidth;
+
+            g2d.setColor(Color.RED);
+            g2d.fillRect(p.getXOrd(), p.getYOrd() - 7,  (int) redBarWidth, 2);
+
+            g2d.setColor(Color.GRAY);
+            g2d.fillRect(redBarXOrd, p.getYOrd() - 7, grayBarLength, 2);
+        }
         g2d.dispose();
     }
 
@@ -40,7 +52,19 @@ public class JAttackView {
         g2d.fill(e);
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font(null, Font.BOLD, 15));
-        g2d.drawString(enemy.getStatus(), enemy.getXOrd(),enemy.getYOrd() - 10);
+        g2d.drawString(enemy.getStatus(), enemy.getXOrd(),enemy.getYOrd() - 15);
+        if (!enemy.getAttacking()) {
+            double percentHealth = (double)enemy.getHealth()/100;
+            double redBarWidth = enemy.getPlayerLength() * percentHealth;
+            int redBarXOrd = enemy.getXOrd() + (int) redBarWidth;
+            int grayBarLength = enemy.getPlayerLength() - (int) redBarWidth;
+
+            g2d.setColor(Color.RED);
+            g2d.fillRect(enemy.getXOrd(), enemy.getYOrd() - 7,  (int) redBarWidth, 3);
+
+            g2d.setColor(Color.GRAY);
+            g2d.fillRect(redBarXOrd, enemy.getYOrd() - 7, grayBarLength, 3);
+        }
         g2d.dispose();
     }
 
