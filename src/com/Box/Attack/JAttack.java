@@ -26,12 +26,12 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
     private Thread t;
 
     public JAttack(JBox game, User u) {
-        this.p = new JAttackPlayer(jam.GAME_HEIGHT - 100 - 50, 100, 0, 0,50, 50);
-        this.e = new Enemy(jam.GAME_HEIGHT - 100 - 200, 700, 0, 0, 200, 200);
+        this.p = new JAttackPlayer(jam.PLATFORM_YORD - 50, 500, 0, 0,50, 50);
+        this.e = new Enemy(jam.PLATFORM_YORD - 200, 700, 0, 0, 200, 200);
         this.jav = new JAttackView();
         this.jam = new JAttackModel(p, e);
         this.pc = new PlayerControl(jam, jav);
-        this.ec = new EnemyControl(jam, jav);
+        this.ec = new EnemyControl(jam, e);
         this.g = game;
         this.u = u;
         this.running = false;
@@ -74,7 +74,6 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
         gameTimer = new Timer(500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //System.out.println(counter);
                 jam.updateCounter();
             }
         });
@@ -83,9 +82,10 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
     private void actionPerformed() {
         requestFocusInWindow();
         if (p.getStatus().compareTo("STUNNED") == 0 && jam.getCounter() - p.getStunnedStart() == 2) p.setStatus("");
-        if (e.getStatus().compareTo("STUNNED") == 0 && jam.getCounter() - e.getStunnedStart() == 4) e.setStatus("");
-        if (e.getStatus().compareTo("CHARGING...") == 0 && jam.getCounter() - e.getStunnedStart() == 3) e.setStatus("");
-        boolean collided = checkCollision();
+        if (e.getStatus().compareTo("STUNNED") == 0 && jam.getCounter() - e.getStunnedStart() == 3) e.setStatus("");
+        if (e.getStatus().compareTo("CHARGING...") == 0 && jam.getCounter() - e.getStunnedStart() == 4) e.setStatus("");
+
+        boolean collided = checkCollision(e);
         pc.movePlayer(collided);
         ec.moveEnemy(collided);
     }
@@ -93,16 +93,15 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        boolean collided = checkCollision();
+        boolean collided = checkCollision(e);
         pc.playerAction(g, collided);
-        //ec.enemyAction(g, collided);
         jav.drawEnemy(g, e);
         jav.drawPlatform(g, jam.PLATFORM_YORD, jam.AQUA);
         jav.hideGlitch(g, jam.LIGHT_GRAY);
     }
 
 
-    private boolean checkCollision() {
+    private boolean checkCollision(Enemy e) {
         return p.getBoundary().intersects(e.getBoundary());
     }
 

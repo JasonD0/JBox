@@ -8,29 +8,27 @@ import java.util.Random;
 public class EnemyControl {
     private PreAttack enemyPA;
     private JAttackModel jam;
-    private JAttackView jav;
     private JAttackPlayer p;
     private Enemy e;
     private Random rand;
     private int currentAttack;
     private boolean falling;
     private boolean fallBack, fallDownWall;
-    private boolean highJump;
     private int jumpCount;
+    private boolean halfHealthHyper;
 
-    public EnemyControl(JAttackModel jam, JAttackView jav) {
+    public EnemyControl(JAttackModel jam, Enemy e) {
         this.enemyPA = new PreAttack();
         this.jam = jam;
-        this.jav = jav;
         this.currentAttack = 0;
         this.p = jam.getPlayer();
-        this.e = jam.getEnemy();
+        this.e = e;
         this.rand = new Random();
         this.falling = false;
         this.fallBack = false;
         this.fallDownWall = false;
-        this.highJump = false;
         this.jumpCount = 0;
+        this.halfHealthHyper = false;
     }
 
     public void setEnemyLastOrdinates() {
@@ -58,25 +56,26 @@ public class EnemyControl {
         } else {
             e.setYOrd(calculateLinearY(maxHeight));
             e.setVelY(0);
-            e.setVelX(30 * direction);
+            e.setVelX(35 * direction);
         }
     }
 
     private int calculateLinearY(int maxHeight) {
-        // y = mx + b     end pt is enemy position before attacking     start is y=150 (650 for normal axis) x = player position known by enemy at time of attack
-        int startX = enemyPA.getLastPlayerXOrd() - p.getPlayerLength() / 2;
-        int jumpPeak = (400 - maxHeight) + 400;    // rescale to normal x-y axis
-        double gradient = (double)(enemyPA.getLastEnemyYOrd() - jumpPeak) / (double)(enemyPA.getLastEnemyXOrd() - startX);
+        // y = mx + b     end pt is enemy position before attacking
+        int startX = enemyPA.getLastPlayerXOrd();
+        int standingYOrd = jam.PLATFORM_YORD - e.getPlayerHeight();
+        int jumpPeak = (standingYOrd - maxHeight) + standingYOrd;    // rescale to normal x-y axis
+        double gradient = (double)(standingYOrd - jumpPeak) / (double)(enemyPA.getLastEnemyXOrd() - startX);
         double b = jumpPeak - gradient*startX;
         double dY = gradient * e.getXOrd() + b;
-        int y = 400 - Math.abs(((int) dY - enemyPA.getLastEnemyYOrd()));
+        int y = standingYOrd - Math.abs(((int) dY - standingYOrd));
         return y;
     }
 
     private void rollAttack(int direction) {
         if (fallBack) fallBack();
         else {
-            e.setVelX(direction * 10);
+            e.setVelX(direction * 15);
             e.setRotationAngle((e.getRotationAngle() + 10) % 360);
         }
     }
@@ -101,14 +100,26 @@ public class EnemyControl {
         }
     }
 
+    private void hyperAttack() {
+        if (e.getStatus().compareTo("HYPER") == 0){
+            e.setRotationAngle((e.getRotationAngle() + 10) % 360);
+        } else{
+            setEnemyLastOrdinates();
+            e.setStatus("HYPER");
+            e.setStunnedStart(jam.getCounter());
+            e.setVelX(rand.nextInt(40 - 5 + 1) + 5);
+            e.setVelY(rand.nextInt(40 - 5 + 1) + 5);
+        }
+    }
+
     public void moveEnemy(boolean collision) {
-        if (e.getStatus().compareTo("") != 0) return;
+        if (e.getStatus().compareTo("") != 0 && e.getStatus().compareTo("HYPER") != 0) return;
         currentAttack = (currentAttack == 0) ? chooseAttack() : currentAttack;
         performAttack();
         if (currentAttack == jam.ROLL) checkRollAttackCollision(collision);
         if (currentAttack == jam.JUMP || currentAttack == jam.TRIPLE_JUMP) checkJumpAttackCollision(collision);
-        if (currentAttack == jam.HIGH_JUMP);
         preventMoveBelow();
+        preventHyperMoveAbove();
         preventMoveOutLeft();
         preventMoveOutRight();
 
@@ -117,6 +128,8 @@ public class EnemyControl {
     }
 
     private void performAttack() {
+        if (e.getHealth() <= 0) e.setStatus("DEAD");
+        if (e.getStatus().compareTo("DEAD") == 0) return;
         if (e.getStatus().compareTo("CHARGING...") == 0 || e.getStatus().compareTo("STUNNED") == 0) return;
         if (!e.getAttacking()) setEnemyLastOrdinates();
         int direction = (enemyPA.getLastEnemyXOrd() + e.getPlayerLength()/2 < enemyPA.getLastPlayerXOrd()) ? 1 : -1;
@@ -125,7 +138,7 @@ public class EnemyControl {
         if (currentAttack == jam.TRIPLE_JUMP) tripleJumpAttack(direction);
         if (currentAttack == jam.ROLL) rollAttack(direction);
         if (currentAttack == jam.HIGH_JUMP) highJumpAttack();
-        /*else if (currentAttack == jam.RAIN);*/
+        if (currentAttack == jam.HYPER) hyperAttack();
 
         e.setAttacking(true);
     }
@@ -169,16 +182,35 @@ public class EnemyControl {
     }
 
     private void preventMoveBelow() {
-        if (e.getYOrd() + e.getPlayerHeight() <= jam.GAME_HEIGHT - 100) return;
-        enemyAttackEnd();
+        if (e.getYOrd() + e.getPlayerHeight() <= jam.PLATFORM_YORD) return;
+        if (currentAttack == jam.HYPER) {
+            if (jam.getCounter() - e.getStunnedStart() == 10) {
+                e.setStatus("");
+                e.setAttacking(false);
+                currentAttack = 0;
+            }
+            else {
+                int direction = (e.getXOrd() < jam.GAME_LENGTH / 2) ? 1 : -1;
+                e.setVelX((rand.nextInt(20 - 5 + 1) + 5) * direction);
+                e.setVelY(-rand.nextInt(20 - 5 + 1) + 5);
+                return;
+            }
+        }
         e.setRotationAngle(0);
         e.setVelY(0);
         e.setVelX(0);
-        e.setYOrd(jam.GAME_HEIGHT - 100 - e.getPlayerHeight());
+        if (currentAttack != jam.HYPER) enemyAttackEnd();
+        e.setYOrd(jam.PLATFORM_YORD - e.getPlayerHeight());
     }
 
     private void preventMoveOutRight() {
         if (e.getXOrd() + e.getPlayerLength() <= jam.GAME_LENGTH) return;
+        if (currentAttack == jam.HYPER) {
+            int direction = (e.getYOrd() < jam.PLATFORM_YORD/2) ? 1 : -1;
+            e.setVelY((rand.nextInt(20 - 5 + 1) + 5)*direction);
+            e.setVelX(-rand.nextInt(20 - 5 + 1) + 5);
+            return;
+        }
         enemyAttackAgainstWall();
         e.setRotationAngle(0);
         e.setVelX(0);
@@ -187,15 +219,34 @@ public class EnemyControl {
 
     private void preventMoveOutLeft() {
         if (e.getXOrd() >= 0) return;
+        if (currentAttack == jam.HYPER) {
+            int direction = (e.getYOrd() < jam.PLATFORM_YORD/2) ? 1 : -1;
+            e.setVelY((rand.nextInt(20 - 5 + 1) + 5)*direction);
+            e.setVelX(rand.nextInt(20 - 5 + 1) + 5);
+            return;
+        }
         enemyAttackAgainstWall();
         e.setRotationAngle(0);
         e.setVelX(0);
         e.setXOrd(0);
     }
 
+    private void preventHyperMoveAbove() {
+        if (currentAttack != jam.HYPER) return;
+        if (e.getYOrd() >= 0 && currentAttack == jam.HYPER) return;
+        int direction = (e.getXOrd() < jam.GAME_LENGTH/2) ? -1 : 1;
+        e.setVelX((rand.nextInt(20 - 5 + 1) + 5)*direction);
+        e.setVelY(rand.nextInt(20 - 5 + 1) + 5);
+    }
+
     private int chooseAttack() {
         if (e.getStatus().compareTo("") != 0) return 0;
         int prob = rand.nextInt(100) + 1;
+        if (prob == 23 || (!halfHealthHyper && e.getHealth() <= 50)) {
+            setUpHyperAttack();
+            halfHealthHyper = true;
+            return jam.HYPER;
+        }
         if (prob > 0 && prob < 13) {
             setUpTripleJumpAttack();
             return jam.TRIPLE_JUMP;
@@ -230,6 +281,12 @@ public class EnemyControl {
         this.e.setStunnedStart(jam.getCounter());
     }
 
+    private void setUpHyperAttack() {
+        this.e.setStatus("CHARGING...");
+        this.e.setColor(Color.red);
+        this.e.setStunnedStart(jam.getCounter());
+    }
+
     private void enemyAttackEnd() {
         if (fallBack) {
             fallBack = false;
@@ -239,8 +296,8 @@ public class EnemyControl {
             falling = false;
         }
         if (currentAttack == jam.TRIPLE_JUMP) {
-            setEnemyLastOrdinates();
             jumpCount++;
+            setEnemyLastOrdinates();
         }
         if ((currentAttack == jam.JUMP || currentAttack == jam.TRIPLE_JUMP) && falling) {
             falling = false;
@@ -248,7 +305,6 @@ public class EnemyControl {
             e.setStunnedStart(jam.getCounter());
         }
         if (currentAttack != jam.TRIPLE_JUMP || jumpCount == 3) {
-            jumpCount = 0;
             currentAttack = 0;
             e.setAttacking(false);
         }

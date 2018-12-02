@@ -13,7 +13,6 @@ public class PlayerControl {
     private boolean attack, attackLock;
     private boolean curvedJump, fallBack, jumped;
     private boolean knockBack, knockBackStun;
-    private boolean boost;
     private int knockBackStartX;
 
     public PlayerControl(JAttackModel jam, JAttackView jav) {
@@ -37,9 +36,7 @@ public class PlayerControl {
         playerPA.setLastEnemyYOrd(e.getYOrd());
     }
 
-    public void movePlayer(boolean collision) {
-        // checkCollision && curvedJumped   rollBack = true;
-
+    private void enemyCollision(boolean collision) {
         // jumpUp  and hit enemy or reach peak
         if ((collision || p.getYOrd() <= 250) && jumped) {
             p.setVelY(15);
@@ -52,7 +49,12 @@ public class PlayerControl {
             p.setHealth(p.getHealth() - 10);
             knockBackSetUp();
         }
-        // ABOVE  COLLISION DETECTION (another function  execute before movePlayer())
+    }
+
+    public void movePlayer(boolean collision) {
+        if (p.getHealth() <= 0) p.setStatus("DEAD");
+        if (p.getStatus().compareTo("DEAD") == 0) return;
+        enemyCollision(collision);
 
         stopKnockBack();
         preventMoveBelow();
@@ -66,6 +68,7 @@ public class PlayerControl {
     private void stopKnockBack() {
         if (knockBackStartX == -1) return;
         if (Math.abs(knockBackStartX - p.getXOrd()) < jam.GAME_LENGTH/2) return;
+        // dasd
         p.setVelX(0);
         p.setVelY(10);
         knockBackStartX = -1;
@@ -77,9 +80,9 @@ public class PlayerControl {
     private void knockBackSetUp() {
         if (knockBack) return;
         int direction = (p.getXOrd() + p.getPlayerLength() < e.getXOrd() + e.getPlayerLength()/2) ? -1 : 1;
-        if (p.getYOrd() + p.getPlayerHeight() < jam.GAME_HEIGHT - 100) {
-            if (p.getXOrd() == 0) direction = 1;
-            if (p.getXOrd() + p.getPlayerLength() == jam.GAME_LENGTH) direction = -1;
+        if (p.getYOrd() + p.getPlayerHeight() <= jam.PLATFORM_YORD) {
+            if (p.getXOrd() <= 0 + p.getPlayerLength()/2) direction = 1;
+            if (p.getXOrd() + p.getPlayerLength() >= jam.GAME_LENGTH - p.getPlayerLength()/2) direction = -1;
         }
         p.setVelX(20*direction);
         p.setVelY(0);
@@ -89,7 +92,7 @@ public class PlayerControl {
 
     // prevent player from moving below platform
     private void preventMoveBelow() {
-        if (p.getYOrd() <= jam.GAME_HEIGHT - p.getPlayerHeight() - 100) return;
+        if (p.getYOrd() <= jam.PLATFORM_YORD - p.getPlayerHeight()) return;
         jumped = false;
         fallBack = false;
         curvedJump = false;
@@ -102,7 +105,7 @@ public class PlayerControl {
         p.setVelY(0);
         p.setVelX(0);
         p.setAngle(0);
-        p.setYOrd(jam.GAME_HEIGHT - p.getPlayerHeight() - 100);
+        p.setYOrd(jam.PLATFORM_YORD - p.getPlayerHeight());
     }
 
     // prevent player from moving outside the right of the window
@@ -147,7 +150,7 @@ public class PlayerControl {
     public void playerAttack(Graphics g, boolean collision) {
         playerAttackSetUp();
         boolean collided = collision;
-        if (p.getYOrd() <= jam.GAME_HEIGHT - 150 && !collided) performPlayerAttack(g);
+        if (p.getYOrd() <= jam.PLATFORM_YORD - p.getPlayerHeight() && !collided) performPlayerAttack(g);
         else playerAttackFinish(collided); // player missed/hit enemy
     }
 
@@ -180,8 +183,8 @@ public class PlayerControl {
             } else {
                 //e.setColor(Color.RED);
                 fallBack = true;
-                p.setSpeedX(10);
-                e.setHealth(e.getHealth() - 10);
+                p.setSpeedX(12);
+                e.setHealth(e.getHealth() - 5);
             }
         }
     }
@@ -235,12 +238,12 @@ public class PlayerControl {
         if (p.getStatus().compareTo("STUNNED") == 0 && jam.getCounter() - p.getStunnedStart() != 2) return;
 
         if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-            p.setVelX(7);
+            p.setVelX(9);
             p.setLastXMove("right");
         }
 
         else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-            p.setVelX(-7);
+            p.setVelX(-9);
             p.setLastXMove("left");
         }
     }
@@ -267,18 +270,15 @@ public class PlayerControl {
             } else {
                 //this.e.setYOrd(150);
                 attack = true;
-                p.setSpeedX(7);
+                p.setSpeedX(10);
             }
         }
 
         else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
             curvedJump = true;
             setPlayerLastOrdinates();
-            p.setSpeedX(7);
+            p.setSpeedX(12);
         }
 
-        else if (e.getKeyCode() == KeyEvent.VK_B) {
-            boost = true;
-        }
     }
 }

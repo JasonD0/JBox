@@ -11,7 +11,7 @@ public class JAttackModel {
     public final static int PLATFORM_YORD = 600;
     public final static int JUMP = 1;
     public final static int TRIPLE_JUMP = 2;
-    public final static int RAIN = 3;
+    public final static int HYPER = 3;
     public final static int ROLL = 4;
     public final static int HIGH_JUMP = 5;
     private JAttackPlayer p;
@@ -39,4 +39,5 @@ public class JAttackModel {
     public Enemy getEnemy() {
         return this.e;
     }
+
 }
