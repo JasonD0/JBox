@@ -1,6 +1,5 @@
 package com.Box.Attack;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 
@@ -55,12 +54,11 @@ public class PlayerControl {
         if (p.getHealth() <= 0) p.setStatus("DEAD");
         if (p.getStatus().compareTo("DEAD") == 0) return;
         enemyCollision(collision);
-
         stopKnockBack();
+        System.out.println("4 : " + p.getVelX() + " " + p.getVelY() + " " + knockBackStartX);
         preventMoveBelow();
         preventMoveOutRight();
         preventMoveOutLeft();
-
         p.setYOrd(p.getYOrd() + p.getVelY());
         p.setXOrd(p.getXOrd() + p.getVelX());
     }
@@ -68,12 +66,13 @@ public class PlayerControl {
     private void stopKnockBack() {
         if (knockBackStartX == -1) return;
         if (Math.abs(knockBackStartX - p.getXOrd()) < jam.GAME_LENGTH/2) return;
+        System.out.println(jumped + " " + curvedJump + " " + knockBackStartX);
         // dasd
         p.setVelX(0);
         p.setVelY(10);
         knockBackStartX = -1;
         jumped = false;
-        curvedJump = false;
+        //curvedJump = false;
         knockBack = false;
     }
 

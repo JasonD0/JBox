@@ -107,8 +107,8 @@ public class EnemyControl {
             setEnemyLastOrdinates();
             e.setStatus("HYPER");
             e.setStunnedStart(jam.getCounter());
-            e.setVelX(rand.nextInt(40 - 5 + 1) + 5);
-            e.setVelY(rand.nextInt(40 - 5 + 1) + 5);
+            e.setVelX(rand.nextInt(40 - 10 + 1) + 10);
+            e.setVelY(rand.nextInt(40 - 10 + 1) + 10);
         }
     }
 
@@ -184,15 +184,15 @@ public class EnemyControl {
     private void preventMoveBelow() {
         if (e.getYOrd() + e.getPlayerHeight() <= jam.PLATFORM_YORD) return;
         if (currentAttack == jam.HYPER) {
-            if (jam.getCounter() - e.getStunnedStart() == 10) {
+            if (jam.getCounter() - e.getStunnedStart() >= 10) {
                 e.setStatus("");
                 e.setAttacking(false);
                 currentAttack = 0;
             }
             else {
                 int direction = (e.getXOrd() < jam.GAME_LENGTH / 2) ? 1 : -1;
-                e.setVelX((rand.nextInt(20 - 5 + 1) + 5) * direction);
-                e.setVelY(-rand.nextInt(20 - 5 + 1) + 5);
+                e.setVelX((rand.nextInt(30 - 10 + 1) + 10) * direction);
+                e.setVelY(-(rand.nextInt(30 - 10 + 1) + 10));
                 return;
             }
         }
@@ -207,8 +207,8 @@ public class EnemyControl {
         if (e.getXOrd() + e.getPlayerLength() <= jam.GAME_LENGTH) return;
         if (currentAttack == jam.HYPER) {
             int direction = (e.getYOrd() < jam.PLATFORM_YORD/2) ? 1 : -1;
-            e.setVelY((rand.nextInt(20 - 5 + 1) + 5)*direction);
-            e.setVelX(-rand.nextInt(20 - 5 + 1) + 5);
+            e.setVelY((rand.nextInt(30 - 10 + 1) + 10)*direction);
+            e.setVelX(-(rand.nextInt(30 - 10 + 1) + 10));
             return;
         }
         enemyAttackAgainstWall();
@@ -221,8 +221,8 @@ public class EnemyControl {
         if (e.getXOrd() >= 0) return;
         if (currentAttack == jam.HYPER) {
             int direction = (e.getYOrd() < jam.PLATFORM_YORD/2) ? 1 : -1;
-            e.setVelY((rand.nextInt(20 - 5 + 1) + 5)*direction);
-            e.setVelX(rand.nextInt(20 - 5 + 1) + 5);
+            e.setVelY((rand.nextInt(30 - 10 + 1) + 10)*direction);
+            e.setVelX(rand.nextInt(30 - 10 + 1) + 10);
             return;
         }
         enemyAttackAgainstWall();
@@ -235,8 +235,8 @@ public class EnemyControl {
         if (currentAttack != jam.HYPER) return;
         if (e.getYOrd() >= 0 && currentAttack == jam.HYPER) return;
         int direction = (e.getXOrd() < jam.GAME_LENGTH/2) ? -1 : 1;
-        e.setVelX((rand.nextInt(20 - 5 + 1) + 5)*direction);
-        e.setVelY(rand.nextInt(20 - 5 + 1) + 5);
+        e.setVelX((rand.nextInt(30 - 10 + 1) + 10)*direction);
+        e.setVelY(rand.nextInt(30 - 10 + 1) + 10);
     }
 
     private int chooseAttack() {
