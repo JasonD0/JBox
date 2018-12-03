@@ -41,11 +41,11 @@ public class PlayerControl {
             p.setVelY(15);
             p.setVelX(0);
             jumped = false;
-            p.setHealth(p.getHealth() - 10);
+            if (!e.getAttacking()) p.setHealth(p.getHealth() - 10);
         }
         // collide with enemy  not during the player attack
         else if (collision && !fallBack && !knockBack && !attack) {
-            p.setHealth(p.getHealth() - 10);
+            if (!e.getAttacking()) p.setHealth(p.getHealth() - 10);
             knockBackSetUp();
         }
     }
@@ -55,19 +55,19 @@ public class PlayerControl {
         if (p.getStatus().compareTo("DEAD") == 0) return;
         enemyCollision(collision);
         stopKnockBack();
-        System.out.println("4 : " + p.getVelX() + " " + p.getVelY() + " " + knockBackStartX);
         preventMoveBelow();
         preventMoveOutRight();
         preventMoveOutLeft();
+        int py = p.getYOrd() + p.getVelY();
+        System.out.println("1: " + p.getYOrd() + " " + p.getVelY() + " " + py);
         p.setYOrd(p.getYOrd() + p.getVelY());
+        System.out.println("2 " + p.getYOrd() + " " + p.getVelY());
         p.setXOrd(p.getXOrd() + p.getVelX());
     }
 
     private void stopKnockBack() {
         if (knockBackStartX == -1) return;
         if (Math.abs(knockBackStartX - p.getXOrd()) < jam.GAME_LENGTH/2) return;
-        System.out.println(jumped + " " + curvedJump + " " + knockBackStartX);
-        // dasd
         p.setVelX(0);
         p.setVelY(10);
         knockBackStartX = -1;

@@ -3,8 +3,6 @@ package com.Box.Attack;
 import java.awt.Color;
 import java.util.Random;
 
-// ADD FALLBACK TO TRIPLE JUMP
-
 public class EnemyControl {
     private PreAttack enemyPA;
     private JAttackModel jam;
@@ -16,6 +14,7 @@ public class EnemyControl {
     private boolean fallBack, fallDownWall;
     private int jumpCount;
     private boolean halfHealthHyper;
+    private boolean phase2;
 
     public EnemyControl(JAttackModel jam, Enemy e) {
         this.enemyPA = new PreAttack();
@@ -29,6 +28,7 @@ public class EnemyControl {
         this.fallDownWall = false;
         this.jumpCount = 0;
         this.halfHealthHyper = false;
+        this.phase2 = false;
     }
 
     public void setEnemyLastOrdinates() {
@@ -113,11 +113,12 @@ public class EnemyControl {
     }
 
     public void moveEnemy(boolean collision) {
+        checkDead();
         if (e.getStatus().compareTo("") != 0 && e.getStatus().compareTo("HYPER") != 0) return;
+        if (e.getStatus().compareTo("DEAD") == 0 || e.getStatus().compareTo("RECOVERING...") == 0) return;
         currentAttack = (currentAttack == 0) ? chooseAttack() : currentAttack;
         performAttack();
-        if (currentAttack == jam.ROLL) checkRollAttackCollision(collision);
-        if (currentAttack == jam.JUMP || currentAttack == jam.TRIPLE_JUMP) checkJumpAttackCollision(collision);
+        checkAttackCollisions(collision);
         preventMoveBelow();
         preventHyperMoveAbove();
         preventMoveOutLeft();
@@ -127,9 +128,29 @@ public class EnemyControl {
         e.setYOrd(e.getYOrd() + e.getVelY());
     }
 
+    private void checkAttackCollisions(boolean collision) {
+        if (currentAttack == jam.ROLL) checkRollAttackCollision(collision);
+        if (currentAttack == jam.JUMP || currentAttack == jam.TRIPLE_JUMP) checkJumpAttackCollision(collision);
+        if (currentAttack == jam.HYPER) hyperAttackCollision(collision);
+        if (currentAttack == jam.HIGH_JUMP) highJumpAttackCollision(collision);
+    }
+
+    private void checkDead() {
+        if (e.getHealth() <= 0) {
+            if (phase2) e.setStatus("DEAD");
+            else {
+                e.setStatus("RECOVERING...");
+                e.setAttacking(false);
+                currentAttack = 0;
+                e.setStunnedStart(jam.getCounter());
+                e.setHealth(100);
+                phase2 = true;
+            }
+        }
+        if (e.getStatus().compareTo("RECOVERING...") == 0 && jam.getCounter() - e.getStunnedStart() >= 5) e.setStatus("");
+    }
+
     private void performAttack() {
-        if (e.getHealth() <= 0) e.setStatus("DEAD");
-        if (e.getStatus().compareTo("DEAD") == 0) return;
         if (e.getStatus().compareTo("CHARGING...") == 0 || e.getStatus().compareTo("STUNNED") == 0) return;
         if (!e.getAttacking()) setEnemyLastOrdinates();
         int direction = (enemyPA.getLastEnemyXOrd() + e.getPlayerLength()/2 < enemyPA.getLastPlayerXOrd()) ? 1 : -1;
@@ -141,6 +162,16 @@ public class EnemyControl {
         if (currentAttack == jam.HYPER) hyperAttack();
 
         e.setAttacking(true);
+    }
+
+    private void highJumpAttackCollision(boolean collided) {
+        if (!collided) return;
+        p.setHealth(p.getHealth() - 20);
+    }
+
+    private void hyperAttackCollision(boolean collided) {
+        if (!collided) return;
+        p.setHealth(p.getHealth() - 5);
     }
 
     private void checkRollAttackCollision(boolean collided) {
@@ -243,48 +274,31 @@ public class EnemyControl {
         if (e.getStatus().compareTo("") != 0) return 0;
         int prob = rand.nextInt(100) + 1;
         if (prob == 23 || (!halfHealthHyper && e.getHealth() <= 50)) {
-            setUpHyperAttack();
+            setUpAttack(Color.RED);
             halfHealthHyper = true;
             return jam.HYPER;
         }
         if (prob > 0 && prob < 13) {
-            setUpTripleJumpAttack();
+            setUpAttack(new Color(4, 255, 206));
             return jam.TRIPLE_JUMP;
         }
         if (prob >= 13 && prob < 40) {
-            setUpJumpAttack();
+            setUpAttack(new Color(0, 255, 218));
             return jam.JUMP;
         }
         if (prob >= 41 && prob < 55 || p.getStatus().compareTo("STUNNED") == 0) {
             return jam.HIGH_JUMP;
         }
         //prob >= 55 && prob < 100
-        setUpRollAttack();
+        setUpAttack(new Color(0, 255, 238));
         return jam.ROLL;
     }
 
-    private void setUpJumpAttack() {
+    private void setUpAttack(Color c) {
         this.e.setStatus("CHARGING...");
-        this.e.setColor(Color.cyan);
         this.e.setStunnedStart(jam.getCounter());
-    }
-
-    private void setUpTripleJumpAttack() {
-        this.e.setStatus("CHARGING...");
-        this.e.setColor(jam.AQUA);
-        this.e.setStunnedStart(jam.getCounter());
-    }
-
-    private void setUpRollAttack() {
-        this.e.setStatus("CHARGING...");
-        this.e.setColor(Color.pink);
-        this.e.setStunnedStart(jam.getCounter());
-    }
-
-    private void setUpHyperAttack() {
-        this.e.setStatus("CHARGING...");
-        this.e.setColor(Color.red);
-        this.e.setStunnedStart(jam.getCounter());
+        this.e.setColor(c);
+        if (phase2) this.e.setColor(jam.AQUA);
     }
 
     private void enemyAttackEnd() {
@@ -305,6 +319,7 @@ public class EnemyControl {
             e.setStunnedStart(jam.getCounter());
         }
         if (currentAttack != jam.TRIPLE_JUMP || jumpCount == 3) {
+            jumpCount = 0;
             currentAttack = 0;
             e.setAttacking(false);
         }

@@ -96,7 +96,7 @@ public class JAttack extends JPanel implements Runnable, KeyListener {
         boolean collided = checkCollision(e);
         pc.playerAction(g, collided);
         jav.drawEnemy(g, e);
-        jav.drawPlatform(g, jam.PLATFORM_YORD, jam.AQUA);
+        jav.drawPlatform(g, jam.PLATFORM_YORD, e.getColor());
         jav.hideGlitch(g, jam.LIGHT_GRAY);
     }
 
