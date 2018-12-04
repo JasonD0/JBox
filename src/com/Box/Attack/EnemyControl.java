@@ -16,6 +16,11 @@ public class EnemyControl {
     private boolean halfHealthHyper;
     private boolean phase2;
 
+    /**
+     * Constructor
+     * @param jam    JAttack data
+     * @param e      the enemy
+     */
     public EnemyControl(JAttackModel jam, Enemy e) {
         this.enemyPA = new PreAttack();
         this.jam = jam;
@@ -31,6 +36,9 @@ public class EnemyControl {
         this.phase2 = false;
     }
 
+    /**
+     * Saves location of enemy and player before enemy attack
+     */
     public void setEnemyLastOrdinates() {
         enemyPA.setLastPlayerXOrd(p.getXOrd());
         enemyPA.setLastPlayerYOrd(p.getYOrd());
@@ -38,6 +46,11 @@ public class EnemyControl {
         enemyPA.setLastEnemyYOrd(e.getYOrd());
     }
 
+    /**
+     * Implements the jumping attack of the enemy
+     * The enemy jumps above the player and drops down
+     * @param direction    the x-ordinate direction in which the enemy will move towards
+     */
     private void jumpAttack(int direction) {
         if (fallBack) {
             fallBack();
@@ -46,7 +59,7 @@ public class EnemyControl {
         if (falling) return;
         int maxHeight = 50;
 
-        // max height of jump
+        // start falling at the max height
         if (e.getYOrd() <= maxHeight) {
             e.setVelX(0);
             e.setVelY(25);
@@ -60,6 +73,11 @@ public class EnemyControl {
         }
     }
 
+    /**
+     * Calculate y ordinate such that the enemy moves along a linear trajectory
+     * @param maxHeight    y-ordinate in which the enemy moves towards
+     * @return             y ordinate
+     */
     private int calculateLinearY(int maxHeight) {
         // y = mx + b     end pt is enemy position before attacking
         int startX = enemyPA.getLastPlayerXOrd();
@@ -72,22 +90,37 @@ public class EnemyControl {
         return y;
     }
 
+    /**
+     * Implements the roll attack of the enemy
+     * The enemy moves towards the player while rotating
+     * @param direction    the x-ordinate direction in which the enemy will move towards
+     */
     private void rollAttack(int direction) {
-        if (fallBack) fallBack();
+        if (fallBack) fallBack(); // jump backwards when collision with player
         else {
             e.setVelX(direction * 15);
             e.setRotationAngle((e.getRotationAngle() + 10) % 360);
         }
     }
 
+    /**
+     * Performs the jump attack multiple times
+     * @param direction    the x-ordinate direction in which the enemy will move towards
+     */
     private void tripleJumpAttack(int direction) {
         jumpAttack(direction);
     }
 
+    /**
+     * Implements the high jump attack of the enemy
+     * The enemy jumps above the screen and drops down
+     */
     private void highJumpAttack() {
-        if (fallBack) fallBack();
+        if (fallBack) fallBack();   // jump backwards when collision with player
         if (falling || fallBack) return;
+        // enemy is above the game
         if (e.getYOrd() + e.getPlayerHeight() <= 0) {
+            // randomly choose an x-ordinate between an interval (using player ordinates before the jump) to drop down
             int maxX = enemyPA.getLastPlayerXOrd() + e.getPlayerLength();
             int minX = enemyPA.getLastPlayerXOrd() - e.getPlayerLength();
             int x = rand.nextInt(maxX - minX + 1) + minX;
@@ -95,15 +128,22 @@ public class EnemyControl {
             e.setYOrd(0);
             e.setVelY(25);
             falling = true;
+        // drop down
         } else {
             e.setVelX(0);
             e.setVelY(-10);
         }
     }
 
+    /**
+     * Implements the hyper attack of the enemy
+     * The enemy randomly bounces on the walls
+     */
     private void hyperAttack() {
+        // start rotating enemy during attack
         if (e.getStatus().compareTo("HYPER") == 0){
             e.setRotationAngle((e.getRotationAngle() + 10) % 360);
+        // choose the initial random co-ordinates to move the enemy towards
         } else{
             setEnemyLastOrdinates();
             e.setStatus("HYPER");
@@ -113,33 +153,45 @@ public class EnemyControl {
         }
     }
 
+    /**
+     * Move enemy
+     * @param collision
+     */
     public void moveEnemy(boolean collision) {
         checkDead();
+
+        // enemy is not currently attacking (not moving)
         if (e.getStatus().compareTo("") != 0 && e.getStatus().compareTo("HYPER") != 0) return;
         if (e.getStatus().compareTo("DEAD") == 0 || e.getStatus().compareTo("RECOVERING...") == 0) return;
+
+        // performs attack and check collisions
         currentAttack = (currentAttack == 0) ? chooseAttack() : currentAttack;
         performAttack();
         checkAttackCollisions(collision);
+
+        // prevent enemy from moving outside walls of the game
         preventMoveBelow();
         preventHyperMoveAbove();
         preventMoveOutLeft();
         preventMoveOutRight();
 
+        // update enemy co-ordinates
         e.setXOrd(e.getXOrd() + e.getVelX());
         e.setYOrd(e.getYOrd() + e.getVelY());
     }
 
-    private void checkAttackCollisions(boolean collision) {
-        if (currentAttack == jam.ROLL) checkRollAttackCollision(collision);
-        if (currentAttack == jam.JUMP || currentAttack == jam.TRIPLE_JUMP) checkJumpAttackCollision(collision);
-        if (currentAttack == jam.HYPER) hyperAttackCollision(collision);
-        if (currentAttack == jam.HIGH_JUMP) highJumpAttackCollision(collision);
-    }
-
+    /**
+     * Checks if enemy has no health
+     */
     private void checkDead() {
+        // enemy has no health remaining
         if (e.getHealth() <= 0) {
+            // phase 2 ended and enemy is defeated
             if (phase2) e.setStatus("DEAD");
+
+            // start second phase of the game
             else {
+                // stop enemy from moving
                 e.setStatus("RECOVERING...");
                 e.setAttacking(false);
                 currentAttack = 0;
@@ -148,9 +200,13 @@ public class EnemyControl {
                 phase2 = true;
             }
         }
+        // allow enemy to move
         if (e.getStatus().compareTo("RECOVERING...") == 0 && jam.getCounter() - e.getStunnedStart() >= 5) e.setStatus("");
     }
 
+    /**
+     * Perform an attack
+     */
     private void performAttack() {
         if (e.getStatus().compareTo("CHARGING...") == 0 || e.getStatus().compareTo("STUNNED") == 0) return;
         if (!e.getAttacking()) setEnemyLastOrdinates();
@@ -165,23 +221,51 @@ public class EnemyControl {
         e.setAttacking(true);
     }
 
+    /**
+     * Checks collision with player during the enemy attack and act accordingly
+     * @param collision    true if collided
+     */
+    private void checkAttackCollisions(boolean collision) {
+        if (currentAttack == jam.ROLL) checkRollAttackCollision(collision);
+        if (currentAttack == jam.JUMP || currentAttack == jam.TRIPLE_JUMP) checkJumpAttackCollision(collision);
+        if (currentAttack == jam.HYPER) hyperAttackCollision(collision);
+        if (currentAttack == jam.HIGH_JUMP) highJumpAttackCollision(collision);
+    }
+
+    /**
+     * Reduce player health when collision occurs during high jump attack
+     * @param collided    true if collision occurs
+     */
     private void highJumpAttackCollision(boolean collided) {
         if (!collided || fallBack) return;
         p.setHealth(p.getHealth() - 20);
         setUpFallBack();
     }
 
+    /**
+     * Reduce player health when collision occurs during hyper attack
+     * @param collided    true if collision occurs
+     */
     private void hyperAttackCollision(boolean collided) {
         if (!collided) return;
         p.setHealth(p.getHealth() - 5);
+        fallBack = true;
     }
 
+    /**
+     * Reduce player health when collision occurs during roll attack
+     * @param collided    true if collision occurs
+     */
     private void checkRollAttackCollision(boolean collided) {
         if (!collided || fallBack) return;
         p.setHealth(p.getHealth() - 10);
         setUpFallBack();
     }
 
+    /**
+     * Reduce player health when collision occurs during jump attack
+     * @param collided    true if collision occurs
+     */
     private void checkJumpAttackCollision(boolean collided) {
         if (!collided || fallBack) return;
         p.setHealth(p.getHealth() - 10);
@@ -189,6 +273,9 @@ public class EnemyControl {
         falling = false;
     }
 
+    /**
+     * Set up to allow enemy to jump back when collision with player occurs
+     */
     private void setUpFallBack() {
         e.setVelY(0);
         e.setVelX(0);
@@ -196,6 +283,9 @@ public class EnemyControl {
         fallBack = true;
     }
 
+    /**
+     * Start jumping back when collision with player occurs
+     */
     private void fallBack() {
         if (fallDownWall) return;
         int direction = (enemyPA.getLastPlayerXOrd() + p.getPlayerLength()/2 < enemyPA.getLastEnemyXOrd() + e.getPlayerLength()/2) ? 1 : -1;
@@ -206,6 +296,14 @@ public class EnemyControl {
         e.setRotationAngle((e.getRotationAngle() + 5) % 360);
     }
 
+    /**
+     * Calculate y ordinate such that the enemy moves along a curved trajectory
+     * @param startX     starting x-ordinate
+     * @param endX       x-ordinate to move towards
+     * @param startY     starting y-ordinate
+     * @param vertexH    y-ordinate to move towards
+     * @return           y-ordinate
+     */
     private int calculateQuadraticY(int startX, int endX, int startY, int vertexH) {
         // y = a(x-h)^2 + k
         double h = (startX + endX)/2;
@@ -215,14 +313,20 @@ public class EnemyControl {
         return (int) dY;
     }
 
+    /**
+     * Prevent enemy from moving below the screen
+     */
     private void preventMoveBelow() {
         if (e.getYOrd() + e.getPlayerHeight() <= jam.PLATFORM_YORD) return;
+
         if (currentAttack == jam.HYPER) {
+            // stop hyper attack
             if (jam.getCounter() - e.getStunnedStart() >= 10) {
                 e.setStatus("");
                 e.setAttacking(false);
                 currentAttack = 0;
             }
+            // bounce enemy off the platform
             else {
                 int direction = (e.getXOrd() < jam.GAME_LENGTH / 2) ? 1 : -1;
                 e.setVelX((rand.nextInt(30 - 10 + 1) + 10) * direction);
@@ -237,8 +341,12 @@ public class EnemyControl {
         e.setYOrd(jam.PLATFORM_YORD - e.getPlayerHeight());
     }
 
+    /**
+     * Prevent player from moving outside the right of the screen
+     */
     private void preventMoveOutRight() {
         if (e.getXOrd() + e.getPlayerLength() <= jam.GAME_LENGTH) return;
+        // bounce enemy off the right wall
         if (currentAttack == jam.HYPER) {
             int direction = (e.getYOrd() < jam.PLATFORM_YORD/2) ? 1 : -1;
             e.setVelY((rand.nextInt(30 - 10 + 1) + 10)*direction);
@@ -251,8 +359,12 @@ public class EnemyControl {
         e.setXOrd(jam.GAME_LENGTH - e.getPlayerLength());
     }
 
+    /**
+     * Prevent player from moving outside the left of the screen
+     */
     private void preventMoveOutLeft() {
         if (e.getXOrd() >= 0) return;
+        // bounce enemy off the left wall
         if (currentAttack == jam.HYPER) {
             int direction = (e.getYOrd() < jam.PLATFORM_YORD/2) ? 1 : -1;
             e.setVelY((rand.nextInt(30 - 10 + 1) + 10)*direction);
@@ -265,6 +377,9 @@ public class EnemyControl {
         e.setXOrd(0);
     }
 
+    /**
+     * Prevent enemy from moving above the screen during hyper attack
+     */
     private void preventHyperMoveAbove() {
         if (currentAttack != jam.HYPER) return;
         if (e.getYOrd() >= 0 && currentAttack == jam.HYPER) return;
@@ -273,6 +388,10 @@ public class EnemyControl {
         e.setVelY(rand.nextInt(30 - 10 + 1) + 10);
     }
 
+    /**
+     * Randomly choose an attack
+     * @return    integer representing the chosen attack
+     */
     private int chooseAttack() {
         if (e.getStatus().compareTo("") != 0) return 0;
         int prob = rand.nextInt(100) + 1;
@@ -297,6 +416,10 @@ public class EnemyControl {
         return jam.ROLL;
     }
 
+    /**
+     * Sets up attack
+     * @param c    color of the enemy
+     */
     private void setUpAttack(Color c) {
         this.e.setStatus("CHARGING...");
         this.e.setStunnedStart(jam.getCounter());
@@ -304,6 +427,9 @@ public class EnemyControl {
         if (phase2) this.e.setColor(jam.AQUA);
     }
 
+    /**
+     * Stop enemy attack when enemy reaches the platform
+     */
     private void enemyAttackEnd() {
         if (fallBack) {
             fallBack = false;
@@ -328,6 +454,9 @@ public class EnemyControl {
         }
     }
 
+    /**
+     * Stop enemy attacks when reaching the wall
+     */
     private void enemyAttackAgainstWall() {
         if (fallBack) {
             fallDownWall = true;

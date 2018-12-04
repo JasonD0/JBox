@@ -19,6 +19,11 @@ public class JAttackView {
         g2d.dispose();
     }
 
+    /**
+     * Draws player
+     * @param g
+     * @param p    player
+     */
     public void drawPlayer(Graphics g, JAttackPlayer p) {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setColor(Color.WHITE);
@@ -44,6 +49,11 @@ public class JAttackView {
         g2d.dispose();
     }
 
+    /**
+     * Draws enemy
+     * @param g
+     * @param enemy    enemy
+     */
     public void drawEnemy(Graphics g, Enemy enemy) {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setColor(enemy.getColor());
@@ -53,6 +63,7 @@ public class JAttackView {
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font(null, Font.BOLD, 15));
         g2d.drawString(enemy.getStatus(), enemy.getXOrd(),enemy.getYOrd() - 15);
+        // draws health bar
         if (enemy.getRotationAngle() == 0) {
             double percentHealth = (enemy.getHealth() <= 0) ? 0 : (double)enemy.getHealth()/100;
             double redBarWidth = enemy.getPlayerLength() * percentHealth;
@@ -68,6 +79,12 @@ public class JAttackView {
         g2d.dispose();
     }
 
+    /**
+     * Draws platform
+     * @param g
+     * @param y    y ordinate of the platform
+     * @param c    color of the platform
+     */
     public void drawPlatform(Graphics g, int y, Color c) {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setColor(c);
@@ -76,6 +93,11 @@ public class JAttackView {
         g2d.dispose();
     }
 
+    /**
+     * Hides animation glitches
+     * @param g
+     * @param c    color of the background
+     */
     public void hideGlitch(Graphics g, Color c) {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setColor(c);
