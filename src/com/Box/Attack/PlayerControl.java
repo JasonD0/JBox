@@ -59,9 +59,9 @@ public class PlayerControl {
         preventMoveOutRight();
         preventMoveOutLeft();
         int py = p.getYOrd() + p.getVelY();
-        System.out.println("1: " + p.getYOrd() + " " + p.getVelY() + " " + py);
+       // System.out.println("1: " + p.getYOrd() + " " + p.getVelY() + " " + py);
         p.setYOrd(p.getYOrd() + p.getVelY());
-        System.out.println("2 " + p.getYOrd() + " " + p.getVelY());
+       // System.out.println("2 " + p.getYOrd() + " " + p.getVelY());
         p.setXOrd(p.getXOrd() + p.getVelX());
     }
 

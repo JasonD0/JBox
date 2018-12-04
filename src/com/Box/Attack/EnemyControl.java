@@ -85,7 +85,8 @@ public class EnemyControl {
     }
 
     private void highJumpAttack() {
-        if (falling) return;
+        if (fallBack) fallBack();
+        if (falling || fallBack) return;
         if (e.getYOrd() + e.getPlayerHeight() <= 0) {
             int maxX = enemyPA.getLastPlayerXOrd() + e.getPlayerLength();
             int minX = enemyPA.getLastPlayerXOrd() - e.getPlayerLength();
@@ -165,8 +166,9 @@ public class EnemyControl {
     }
 
     private void highJumpAttackCollision(boolean collided) {
-        if (!collided) return;
+        if (!collided || fallBack) return;
         p.setHealth(p.getHealth() - 20);
+        setUpFallBack();
     }
 
     private void hyperAttackCollision(boolean collided) {
@@ -177,19 +179,20 @@ public class EnemyControl {
     private void checkRollAttackCollision(boolean collided) {
         if (!collided || fallBack) return;
         p.setHealth(p.getHealth() - 10);
-        e.setVelY(0);
-        e.setVelX(0);
-        setEnemyLastOrdinates();
-        fallBack = true;
+        setUpFallBack();
     }
 
     private void checkJumpAttackCollision(boolean collided) {
         if (!collided || fallBack) return;
         p.setHealth(p.getHealth() - 10);
-        e.setVelX(0);
-        e.setVelY(0);
-        setEnemyLastOrdinates();
+        setUpFallBack();
         falling = false;
+    }
+
+    private void setUpFallBack() {
+        e.setVelY(0);
+        e.setVelX(0);
+        setEnemyLastOrdinates();
         fallBack = true;
     }
 

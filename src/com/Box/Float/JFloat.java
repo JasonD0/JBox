@@ -34,9 +34,7 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
     private Player p1;
     private User u;
     private boolean running = false;
-    private boolean exited = false;
     private boolean endGame = false;
-    private double delta;
     private Thread t;
     private Timer gameTimer;        // survival time
     private int counter;
@@ -283,10 +281,9 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
         long lastTime = System.nanoTime();
         final double fps = 60.0;
         final double updateInterval = 1000000000 / fps;
-        delta = 0;
+        double delta = 0;
 
         while (running) {
-            if (exited) break;
             long now = System.nanoTime();
             delta += (now - lastTime)/updateInterval;
             lastTime = now;
@@ -381,6 +378,7 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
     private void endGame() {
         System.out.println("Game Over");
         u.setHighScore(counter, "GravityShift");
+        running = false;
         stopTimers();
         UIManager.put("Panel.background", jfm.LIGHT_GRAY);
         UIManager.put("OptionPane.background", jfm.LIGHT_GRAY);
@@ -462,23 +460,14 @@ public class JFloat extends JPanel implements KeyListener, Runnable {
     private void buttonFunctionality(String option) {
         switch (option) {
             case "Exit":
-                running = false;
                 game.dispose();
                 System.exit(0);
                 break;
             case "Home":
-                running = false;
-                exited = true;
                 game.setHome();
                 break;
             case "Retry":
-                jfm.setDelayRange(400, 900);
-                jfm.setObstacleVel(10);
-                delta = 0;
-                removeObstacles();
-                obstacleDelayer.setInitialDelay(2000);
-                start();
-                startTimers();
+                game.setJFloat();
                 break;
         }
     }

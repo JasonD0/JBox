@@ -43,7 +43,6 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     private boolean instructions = true;
     private boolean endGame = false;
     private boolean paused = false;
-    private boolean exited = false;     // exited jumpover game
     private boolean running = false;
     private Thread t;
     private boolean multiplayer;
@@ -323,16 +322,16 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     @Override
     public void keyPressed(KeyEvent e) {
         if (paused) return;
-        if (p1.getYOrd() == jjm.GAME_HEIGHT1 - p1.getPlayerHeight()) updatePlayer(e, p1);
-        if (multiplayer && p2.getYOrd() == jjm.GAME_HEIGHT2 - p2.getPlayerHeight()) updatePlayer(e, p2);
+        if (p1.getYOrd() == jjm.GAME_HEIGHT1 - p1.getPlayerHeight()) updatePlayerP1(e, p1);
+        if (multiplayer && p2.getYOrd() == jjm.GAME_HEIGHT2 - p2.getPlayerHeight()) updatePlayerP2(e, p2);
     }
 
     /**
-     * Update player velocity and size
+     * Update player 1 velocity and size
      * @param e
      * @param p
      */
-    private void updatePlayer(KeyEvent e, Player p) {
+    private void updatePlayerP1(KeyEvent e, Player p) {
         // player jumped
         if (e.getKeyCode() == KeyEvent.VK_UP) {
             setOriginalHeight(p);
@@ -340,6 +339,26 @@ public class JJump extends JPanel implements KeyListener, Runnable {
         }
         // player crouched
         else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+            if (p.getPlayerHeight() == jjm.PLAYER_HEIGHT) {
+                p.setPlayerHeight(p.getPlayerHeight() / 2);
+                p.setYOrd(p.getYOrd() + p.getPlayerHeight());
+            }
+        }
+    }
+
+    /**
+     * Update player velocity and size
+     * @param e
+     * @param p
+     */
+    private void updatePlayerP2(KeyEvent e, Player p) {
+        // player jumped
+        if (e.getKeyCode() == KeyEvent.VK_W) {
+            setOriginalHeight(p);
+            p.setVelY(-jjm.getPlayerVel());
+        }
+        // player crouched
+        else if (e.getKeyCode() == KeyEvent.VK_S) {
             if (p.getPlayerHeight() == jjm.PLAYER_HEIGHT) {
                 p.setPlayerHeight(p.getPlayerHeight() / 2);
                 p.setYOrd(p.getYOrd() + p.getPlayerHeight());
@@ -364,20 +383,17 @@ public class JJump extends JPanel implements KeyListener, Runnable {
         if (paused) return;
 
         // update size and velocity of player
-        if (p1.getYOrd() == jjm.GAME_HEIGHT1 - p1.getPlayerHeight()) checkOnPlatform(p1, e);
-        if (multiplayer && p2.getYOrd() == jjm.GAME_HEIGHT2 - p2.getPlayerHeight()) checkOnPlatform(p2, e);
+        if (p1.getYOrd() == jjm.GAME_HEIGHT1 - p1.getPlayerHeight() && e.getKeyCode() == KeyEvent.VK_UP) checkOnPlatform(p1);
+        if (multiplayer && p2.getYOrd() == jjm.GAME_HEIGHT2 - p2.getPlayerHeight() && e.getKeyCode() == KeyEvent.VK_W) checkOnPlatform(p2);
     }
 
     /**
      * Change player size and velocity if on platform
      * @param p
-     * @param e
      */
-    private void checkOnPlatform(Player p, KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_W) {
-            setOriginalHeight(p);
-            p.setVelY(-jjm.getPlayerVel());
-        }
+    private void checkOnPlatform(Player p) {
+        setOriginalHeight(p);
+        p.setVelY(-jjm.getPlayerVel());
     }
 
     /**
@@ -397,6 +413,7 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     private void endGame() {
         System.out.println("Game Over");
         u.setHighScore(counter, "JumpOver");
+        running = false;
         stopTimers();
         UIManager.put("Panel.background", jjm.LIGHT_GRAY);
         UIManager.put("OptionPane.background", jjm.LIGHT_GRAY);
@@ -474,27 +491,15 @@ public class JJump extends JPanel implements KeyListener, Runnable {
     private void buttonFunctionality(String option) {
         switch (option) {
             case "Exit":
-                running = false;
                 game.dispose();
                 System.exit(0);
                 break;
             case "Home":
-                running = false;
-                exited = true;
                 game.setHome();
                 break;
             case "Retry":
                 u.getHighScore("JumpOver");
-                instructions = true;
-                p1_dead = -1;
-                p2_dead = -1;
-                paused = false;
-                removeObstacles();
-                obstacleDelayer.setInitialDelay(2000);
-                p1.setPlayerHeight(jjm.PLAYER_HEIGHT);
-                if (multiplayer) p2.setPlayerHeight(jjm.PLAYER_HEIGHT);
-                start();
-                startTimers();
+                game.setJJump(multiplayer);
                 break;
         }
     }
@@ -538,7 +543,6 @@ public class JJump extends JPanel implements KeyListener, Runnable {
         double delta = 0;
 
         while (running) {
-            if (exited) break;
             long now = System.nanoTime();
             delta += (now - lastTime)/updateInterval;
             lastTime = now;

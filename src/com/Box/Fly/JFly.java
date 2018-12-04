@@ -220,7 +220,9 @@ public class JFly extends JPanel implements KeyListener, Runnable {
      */
     @Override
     public void keyReleased(KeyEvent e) {
-        if (!start) startTimers();
+        if (!start && running) {
+            startTimers();
+        }
         p1.setVelY(5);
     }
 
@@ -258,6 +260,7 @@ public class JFly extends JPanel implements KeyListener, Runnable {
      * Start all timers for the game
      */
     private void startTimers() {
+        if (!running) return;
         start = true;
         gameTimer.start();
         obstacleDelayer.start();
@@ -297,6 +300,7 @@ public class JFly extends JPanel implements KeyListener, Runnable {
      */
     private void endGame() {
         System.out.println("Game Over");
+        running = false;
         stopTimers();
         UIManager.put("Panel.background", jfm.LIGHT_GRAY);
         UIManager.put("OptionPane.background", jfm.LIGHT_GRAY);
@@ -376,19 +380,14 @@ public class JFly extends JPanel implements KeyListener, Runnable {
     private void buttonFunctionality(String option) {
         switch (option) {
             case "Exit":
-                running = false;
                 game.dispose();
                 System.exit(0);
                 break;
             case "Home":
-                running = false;
                 game.setHome();
                 break;
             case "Retry":
-                jfm.removeAllObstacles();
-                p1.setYOrd(250);
-                p1.setVelY(0);
-                start();
+                game.setJFly();
                 break;
         }
     }
